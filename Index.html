@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkCentral</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SortableJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1e202b; /* Fondo oscuro principal */
+            --bg-secondary: #2b2e3d;
+            --bg-header: #161820;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-primary: #4a90e2;
+            --accent-secondary: #50e3c2;
+            --danger: #e94b3c;
+            --border-color: #3a3f51;
+            --shadow-color: rgba(0,0,0,0.2);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --sortable-ghost-bg: rgba(74, 144, 226, 0.2);
+            --sortable-chosen-bg: #35394a;
+            --item-min-width: 220px; 
+            --item-padding: 15px; 
+            --accent-primary-transparent: rgba(74, 144, 226, 0.3);
+            --pin-color: var(--accent-secondary);
+        }
+
+        html.light-mode {
+            --bg-primary: #f4f7f6; 
+            --bg-secondary: #ffffff; 
+            --bg-header: #e9edf1;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --accent-primary: #007bff;
+            --accent-secondary: #28a745;
+            --danger: #dc3545;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0,0,0,0.1);
+            --sortable-ghost-bg: rgba(0, 123, 255, 0.15);
+            --sortable-chosen-bg: #e9ecef;
+            --accent-primary-transparent: rgba(0, 123, 255, 0.2);
+            --pin-color: var(--accent-secondary);
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            max-width: 1200px; 
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .app-header {
+            background-color: var(--bg-header);
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .app-header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .app-header-left { 
+            display: flex;
+            align-items: center;
+            flex-shrink: 0; 
+        }
+
+        #backToParentBtn { 
+            background: none;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            padding: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
+            margin-right: 15px;
+        }
+        #backToParentBtn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        #backToParentBtn.hidden { 
+            display: none !important;
+        }
+        
+        #backToParentBtn.drag-over-target {
+            border-color: var(--accent-secondary) !important; 
+            background-color: var(--sortable-ghost-bg) !important;
+            transform: scale(1.1); 
+            box-shadow: 0 0 8px var(--accent-secondary);
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+        }
+        
+        .app-header-controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 15px;
+            min-height: 38px;
+        }
+
+        .app-header-center {
+            flex-grow: 1; 
+            display: flex;
+            align-items: center; 
+            min-width: 0; 
+            overflow: hidden; 
+        }
+
+        .header-search-sort-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        #searchInput {
+            padding: 7px 12px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            width: 180px;
+            transition: width 0.3s ease-in-out, border-color 0.2s, box-shadow 0.2s;
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-primary-transparent);
+            width: 240px;
+        }
+        html.light-mode #searchInput {
+            background-color: var(--bg-secondary);
+        }
+
+        #sortOptions {
+            padding: 7px 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            cursor: pointer;
+            height: 34px;
+        }
+        #sortOptions:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        html.light-mode #sortOptions {
+            background-color: var(--bg-secondary);
+        }
+
+        .breadcrumbs-container {
+            font-size: 0.8em; 
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            white-space: nowrap; 
+            max-width: 100%; 
+        }
+        .breadcrumbs-container.hidden {
+            display: none !important;
+        }
+
+        .breadcrumbs-container a,
+        .breadcrumbs-container span.breadcrumb-item-text {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-right: 5px; 
+            display: inline-block; 
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle; 
+        }
+         .breadcrumbs-container a > i.fas.fa-home { 
+            font-size: 1.1em; 
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .breadcrumbs-container a:hover,
+        .breadcrumbs-container a:hover span.breadcrumb-item-text {
+            color: var(--accent-primary);
+            text-decoration: underline;
+        }
+         .breadcrumbs-container a:hover > i.fas.fa-home {
+            color: var(--accent-primary);
+        }
+
+        .breadcrumbs-container .breadcrumb-separator {
+            margin-right: 5px;
+            user-select: none;
+            vertical-align: middle;
+        }
+
+        .breadcrumbs-container .breadcrumb-current span.breadcrumb-item-text {
+            font-weight: normal; 
+            color: var(--text-primary); 
+            max-width: 120px;
+        }
+
+        .header-menu-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0; 
+        }
+        
+        .header-action-button {
+            background: none;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            padding: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, border-color 0.2s;
+            margin-right: 10px;
+        }
+        .header-action-button:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .header-menu-container > .header-action-button:last-of-type {
+            margin-right: 0;
+        }
+
+        .main-menu-dropdown {
+            opacity: 0; 
+            visibility: hidden; 
+            max-height: 0; 
+            position: absolute;
+            top: calc(100% + 5px); 
+            right: 0;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            z-index: 1005; 
+            min-width: 200px;
+            overflow: hidden; 
+            transform: translateY(-10px); 
+            transition: opacity 0.25s ease-out, 
+                        max-height 0.25s ease-out, 
+                        visibility 0s linear 0.25s,
+                        transform 0.25s ease-out; 
+        }
+        .main-menu-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            max-height: 500px; 
+            transform: translateY(0);
+            transition: opacity 0.25s ease-in, 
+                        max-height 0.25s ease-in, 
+                        visibility 0s linear 0s,
+                        transform 0.25s ease-in;
+        }
+        .main-menu-dropdown button, .main-menu-dropdown .import-label-button {
+            display: flex; 
+            align-items: center; 
+            width: calc(100% - 20px); 
+            padding: 10px;
+            background: none;
+            color: var(--text-primary);
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .main-menu-dropdown button i, .main-menu-dropdown .import-label-button i {
+            margin-right: 10px; 
+            width: 16px; 
+            text-align: center;
+        }
+        .main-menu-dropdown button:hover, .main-menu-dropdown .import-label-button:hover {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        html.light-mode .main-menu-dropdown button, html.light-mode .main-menu-dropdown .import-label-button {
+            color: var(--text-primary);
+        }
+        html.light-mode .main-menu-dropdown button:hover, html.light-mode .main-menu-dropdown .import-label-button:hover {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        #importFile { display: none; }
+
+        #link-organizer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(var(--item-min-width), 1fr));
+            gap: 20px;
+            padding: 20px 0; 
+            min-height: 200px;
+        }
+        .no-items-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 40px 20px;
+            grid-column: 1 / -1; 
+        }
+
+        .item {
+            background-color: var(--bg-secondary);
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            position: relative; 
+            min-height: 150px; 
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out, background-color 0.2s ease-out;
+        }
+        .item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        .item.pinned {
+            border-left: 4px solid var(--pin-color);
+        }
+        .item.pinned .action-pin i {
+           color: var(--pin-color) !important;
+        }
+        /* Style specific for notes to differentiate slightly if desired */
+        .item.note-item {
+            /* Optional: slight tint or style for notes */
+        }
+        
+        .drag-handle {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            color: var(--text-secondary);
+            cursor: grab;
+            font-size: 1em; 
+            padding: 5px;
+            z-index: 1;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .item:hover .drag-handle {
+            opacity: 1;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .item-content-wrapper {
+            padding: var(--item-padding);
+            padding-top: 40px; 
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer; 
+        }
+        .link-item .item-content-wrapper {
+            text-decoration: none; 
+        }
+
+        .item-icon {
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px; 
+            height: 20px;
+            font-size: 1.1em; 
+        }
+        .item-icon > .fas, .item-icon > .far {
+             color: var(--accent-primary);
+        }
+        .note-item .item-icon > .fas {
+            color: var(--text-secondary); /* Different color for notes icons maybe? */
+        }
+
+        .link-favicon {
+            width: 18px; 
+            height: 18px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .item-path {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: -2px 0 8px 0;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            width: fit-content;
+            max-width: 100%;
+        }
+        .item-path:hover {
+            color: var(--accent-secondary);
+            text-decoration: underline;
+        }
+        .item-path i { font-size: 0.9em; opacity: 0.8; flex-shrink: 0; }
+        .item-path span { overflow: hidden; text-overflow: ellipsis; }
+
+        .item-name-line { 
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            font-weight: 600; 
+            font-size: 1.1em;
+            color: var(--text-primary); 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            display: -webkit-box;
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical;
+        }
+
+        .link-item .item-name { 
+             color: var(--text-primary);
+        }
+        .link-item:hover .item-name {
+            color: var(--accent-secondary);
+        }
+        .external-link-icon { 
+            margin-left: 8px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .link-item-description {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+            margin-top: auto; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; 
+            -webkit-box-orient: vertical;
+        }
+        /* Notes description styling */
+        .note-item-description {
+            font-size: 0.9em;
+            color: var(--text-primary); /* Darker text for notes for readability */
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+            margin-top: 10px;
+            /* Notes also clamped, clicking opens full view */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4; 
+            -webkit-box-orient: vertical;
+        }
+        html.light-mode .link-item-description {
+            color: var(--text-secondary);
+        }
+
+        .item-actions-container {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: flex-end;
+            gap: 3px;
+            background-color: rgba(var(--bg-secondary-rgb, 43, 46, 61), 0.5); 
+            backdrop-filter: blur(2px);
+            padding: 3px;
+            border-radius: 5px;
+            z-index: 1;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .item:hover .item-actions-container {
+            opacity: 1;
+        }
+        html.light-mode .item-actions-container {
+             background-color: rgba(var(--bg-secondary-rgb, 255, 255, 255), 0.5);
+        }
+
+        .item-actions-container button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 5px 7px;
+            cursor: pointer;
+            font-size: 0.9em; 
+            border-radius: 3px;
+            line-height: 1; 
+        }
+        .item-actions-container button:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+        html.light-mode .item-actions-container button:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        .item-actions-container .action-delete:hover {
+            color: var(--danger);
+            background-color: rgba(233, 75, 60, 0.1);
+        }
+        .item-actions-container .action-add:hover,
+        .item-actions-container .action-open-all:hover {
+            color: var(--accent-secondary);
+        }
+         .item-actions-container .action-pin:hover {
+            color: var(--pin-color);
+        }
+
+
+        .sortable-ghost {
+            opacity: 0.7;
+            background-color: var(--sortable-ghost-bg) !important;
+            border: 2px dashed var(--accent-primary);
+            transition: opacity 0.15s ease-out; 
+        }
+
+        .sortable-chosen, .sortable-drag {
+            opacity: 0.9;
+            background-color: var(--sortable-chosen-bg) !important;
+            box-shadow: 0 6px 12px var(--shadow-color) !important;
+            transform: scale(1.03);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1010; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            margin: 10% auto;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .close-button {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--text-primary);
+        }
+        .modal-body label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .modal-body input[type="text"],
+        .modal-body input[type="url"],
+        .modal-body textarea,
+        .modal-body select,
+        .modal-body input[type="number"],
+        .modal-body input[type="range"] { 
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1em;
+        }
+        .modal-body textarea {
+            min-height: 100px; /* Taller for notes */
+            resize: vertical;
+        }
+        .modal-body input[type="range"] {
+            padding: 0; 
+            vertical-align: middle;
+        }
+        .slider-value-display {
+            display: inline-block;
+            min-width: 35px;
+            text-align: right;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+         .modal-body input[type="color"] {
+            padding: 0;
+            height: 30px;
+            width: 50px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-primary);
+            vertical-align: middle;
+            margin-bottom: 10px;
+        }
+
+        html.light-mode .modal-body input[type="text"],
+        html.light-mode .modal-body input[type="url"],
+        html.light-mode .modal-body textarea,
+        html.light-mode .modal-body select,
+        html.light-mode .modal-body input[type="number"],
+        html.light-mode .modal-body input[type="range"], 
+        html.light-mode .modal-body input[type="color"] {
+             background-color: #fff;
+        }
+
+        .modal-footer {
+            text-align: right;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+        .modal-footer button {
+            background-color: var(--accent-primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .modal-footer button.cancel-btn {
+            background-color: var(--text-secondary);
+        }
+         .modal-footer button:hover {
+            opacity: 0.85;
+        }
+        #colorInputsContainer .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #colorInputsContainer .color-input-wrapper label {
+            flex-basis: 180px;
+            margin-right: 10px;
+            font-weight: normal;
+        }
+
+
+        #customContextMenu { display: none; position: absolute; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 5px; box-shadow: 0 2px 10px var(--shadow-color); z-index: 1050; padding: 5px 0; min-width: 200px; }
+        #customContextMenu ul { list-style: none; margin: 0; padding: 0; }
+        #customContextMenu li { padding: 8px 15px; cursor: pointer; color: var(--text-primary); font-size: 0.9em; display: flex; align-items: center; }
+        #customContextMenu li i { margin-right: 10px; width: 16px; text-align: center; }
+        #customContextMenu li:hover { background-color: var(--accent-primary); color: white; }
+        #customContextMenu li.separator { height: 1px; background-color: var(--border-color); margin: 5px 0; padding: 0; }
+        #customContextMenu li.disabled { color: var(--text-secondary); cursor: default; pointer-events: none; }
+        #customContextMenu li.disabled:hover { background-color: transparent; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-header-top-row">
+                <div class="app-header-left"> 
+                    <button id="backToParentBtn" class="hidden" title="Volver Atrás"><i class="fas fa-arrow-left"></i></button>
+                    <h1>LinkCentral</h1>
+                </div>
+                <div class="header-menu-container">
+                    <button id="showAddLinkModalBtn" class="header-action-button" title="Añadir Enlace"><i class="fas fa-link"></i></button>
+                    <button id="showAddNoteModalBtn" class="header-action-button" title="Añadir Nota"><i class="fas fa-sticky-note"></i></button> <!-- Button added for notes -->
+                    <button id="showAddGroupModalBtn" class="header-action-button" title="Añadir Grupo"><i class="fas fa-folder-plus"></i></button>
+                    <button id="mainMenuToggle" class="header-action-button" title="Más opciones"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="main-menu-dropdown" id="mainMenuDropdown">
+                        <button id="exportDataBtn"><i class="fas fa-file-export"></i> Exportar</button>
+                        <label for="importFile" class="import-label-button"><i class="fas fa-file-import"></i> Importar</label>
+                        <input type="file" id="importFile" accept=".json" style="display:none;">
+                    </div>
+                </div>
+            </div>
+            <div class="app-header-controls-row">
+                <div class="app-header-center"> 
+                    <div id="breadcrumbs-container" class="breadcrumbs-container hidden"></div>
+                </div>
+                <div class="header-search-sort-container"> 
+                    <input type="search" id="searchInput" placeholder="Buscar...">
+                    <select id="sortOptions">
+                        <option value="default">Ordenar: Predeterminado</option>
+                        <option value="name_asc">Nombre (A-Z)</option>
+                        <option value="name_desc">Nombre (Z-A)</option>
+                        <option value="date_new">Fecha (Más recientes)</option>
+                        <option value="date_old">Fecha (Más antiguos)</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <main id="link-organizer" class="sortable-list">
+            <!-- Items will be dynamically inserted here -->
+        </main>
+    </div>
+
+    <!-- Modals (itemModal, colorCustomizationModal) -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Añadir Elemento</h2>
+                <button class="close-button" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalItemId">
+                <input type="hidden" id="modalItemType">
+                <input type="hidden" id="modalParentId"> 
+                <label for="modalItemName" id="modalNameLabel">Nombre:</label>
+                <input type="text" id="modalItemName" required>
+                <div id="modalUrlContainer">
+                    <label for="modalItemUrl">URL:</label>
+                    <input type="url" id="modalItemUrl">
+                </div>
+                <div id="modalDescriptionContainer">
+                    <label for="modalItemDescription" id="modalDescriptionLabel">Descripción:</label>
+                    <textarea id="modalItemDescription"></textarea>
+                </div>
+                <div id="modalMoveToGroupContainer" style="display: none;">
+                    <label for="modalItemGroupSelector">Mover a Grupo:</label>
+                    <select id="modalItemGroupSelector">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="saveModalItemBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="colorCustomizationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Personalizar Apariencia</h2>
+                <button class="close-button" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="colorInputsContainer">
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="resetColorsBtn" class="cancel-btn">Restablecer Predeterminados</button>
+                <button type="button" class="cancel-btn" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="saveColorsBtn">Guardar Colores</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customContextMenu">
+        <ul></ul>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const linkOrganizerEl = document.getElementById('link-organizer');
+            const itemModal = document.getElementById('itemModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalItemId = document.getElementById('modalItemId');
+            const modalItemType = document.getElementById('modalItemType');
+            const modalParentIdInput = document.getElementById('modalParentId');
+            const modalItemName = document.getElementById('modalItemName');
+            const modalItemUrl = document.getElementById('modalItemUrl');
+            const modalUrlContainer = document.getElementById('modalUrlContainer');
+            const modalItemDescription = document.getElementById('modalItemDescription');
+            const modalDescriptionContainer = document.getElementById('modalDescriptionContainer');
+            const modalNameLabel = document.getElementById('modalNameLabel');
+            const modalDescriptionLabel = document.getElementById('modalDescriptionLabel');
+            const saveModalItemBtn = document.getElementById('saveModalItemBtn');
+            
+            const modalMoveToGroupContainer = document.getElementById('modalMoveToGroupContainer');
+            const modalItemGroupSelector = document.getElementById('modalItemGroupSelector');
+
+            const mainMenuToggleBtn = document.getElementById('mainMenuToggle');
+            const mainMenuDropdown = document.getElementById('mainMenuDropdown');
+
+            const exportDataBtn = document.getElementById('exportDataBtn'); 
+            const importFileEl = document.getElementById('importFile'); 
+
+            const backToParentBtn = document.getElementById('backToParentBtn');
+            const breadcrumbsContainer = document.getElementById('breadcrumbs-container'); 
+
+            const searchInputEl = document.getElementById('searchInput');
+            const sortOptionsEl = document.getElementById('sortOptions');
+
+
+            const STORAGE_KEY = 'linkCentralData_v2'; 
+            const SORT_PREF_KEY = 'linkCentralSortPref_v1'; 
+            let data = [];
+            let currentViewStack = []; 
+            let sortableInstance = null; 
+            let currentSearchTerm = ''; 
+            let currentSortPreference = localStorage.getItem(SORT_PREF_KEY) || 'default'; 
+
+            const customContextMenuEl = document.getElementById('customContextMenu');
+            let copiedItemData = null; 
+            let copiedItemType = null;  
+            let contextMenuMouseX = 0;
+            let contextMenuMouseY = 0;
+
+            let draggedItemInfo = null;
+            let dropHandledByBackButton = false;
+            
+            function getCurrentParentId() {
+                return currentViewStack.length > 0 ? currentViewStack[currentViewStack.length - 1] : null;
+            }
+            
+            function hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+            function updateRootVarRgbEquivalents() {
+                 const bgSecondaryHex = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim();
+                 const rgb = hexToRgb(bgSecondaryHex);
+                 if (rgb) {
+                    document.documentElement.style.setProperty('--bg-secondary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+                 }
+            }
+
+            function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 7); }
+            function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+            function loadData() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                data = stored ? JSON.parse(stored) : [];
+                ensureItemProperties(data); 
+                currentViewStack = []; 
+                sortOptionsEl.value = currentSortPreference; 
+                render();
+            }
+
+            function ensureItemProperties(itemsArray) {
+                itemsArray.forEach(item => {
+                    if (typeof item.createdAt === 'undefined') {
+                        item.createdAt = Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30); 
+                    }
+                    if (typeof item.isPinned === 'undefined') {
+                        item.isPinned = false;
+                    }
+                    if ((item.type === 'link' || item.type === 'note') && typeof item.description === 'undefined') {
+                        item.description = '';
+                    }
+                    if (item.type === 'group') {
+                        if (item.items) {
+                            ensureItemProperties(item.items);
+                        } else {
+                            item.items = []; 
+                        }
+                    }
+                });
+            }
+
+
+            function findItemRecursive(itemId, itemsArrayToSearchIn = data) {
+                for (let i = 0; i < itemsArrayToSearchIn.length; i++) {
+                    const item = itemsArrayToSearchIn[i];
+                    if (item.id === itemId) return { item, parentArray: itemsArrayToSearchIn, index: i };
+                    if (item.type === 'group' && item.items) {
+                        const found = findItemRecursive(itemId, item.items);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            function findParentDetails(itemId, currentDataToSearch = data, parentId = null, path = []) {
+                for (let item of currentDataToSearch) {
+                    if (item.id === itemId) {
+                        return { parentId: parentId, itemData: item, path: [...path] }; 
+                    }
+                    if (item.type === 'group' && item.items) {
+                        const found = findParentDetails(itemId, item.items, item.id, [...path, item.id]);
+                        if (found) return found;
+                    }
+                }
+                return null; 
+            }
+
+            function getDescendantIds(parentId) {
+                let descendantIds = [];
+                const parentResult = findItemRecursive(parentId); 
+                
+                if (parentResult && parentResult.item && parentResult.item.type === 'group' && parentResult.item.items) {
+                    function recurse(currentItems) {
+                        for (const item of currentItems) {
+                            descendantIds.push(item.id);
+                            if (item.type === 'group' && item.items) {
+                                recurse(item.items);
+                            }
+                        }
+                    }
+                    recurse(parentResult.item.items);
+                }
+                return descendantIds;
+            }
+
+
+            function addItem(type, name, url, parentId, customId = null, isCollapsed = undefined, itemsArray = null, description = null) {
+                const newItem = { 
+                    id: customId || generateId(), 
+                    type, 
+                    name, 
+                    isCollapsed: type === 'group' ? (isCollapsed === undefined ? false : isCollapsed) : undefined,
+                    createdAt: Date.now(), 
+                    isPinned: false
+                };
+                if (type === 'link') {
+                    newItem.url = (url && !url.startsWith('http://') && !url.startsWith('https://')) ? `http://${url}` : url;
+                    newItem.description = description || '';
+                } else if (type === 'note') {
+                    // Notes don't need URL, but they use description
+                    newItem.description = description || '';
+                } else { 
+                    newItem.items = itemsArray || []; 
+                }
+
+                if (parentId) {
+                    const parentResult = findItemRecursive(parentId);
+                    if (parentResult && parentResult.item.type === 'group') {
+                        if (!parentResult.item.items) parentResult.item.items = []; 
+                        parentResult.item.items.push(newItem);
+                    } else { 
+                        console.warn("addItem: Padre no encontrado o no es un grupo, añadiendo a la raíz. ParentID:", parentId);
+                        data.push(newItem); 
+                    }
+                } else {
+                    data.push(newItem);
+                }
+                saveData();
+                render(); 
+                mainMenuDropdown.classList.remove('show'); 
+            }
+
+            function editItem(id, newName, newUrl, newDescription, newParentIdForItem = undefined) {
+                const result = findItemRecursive(id);
+                if (!result) {
+                    console.error("editItem: Elemento no encontrado", id);
+                    return;
+                }
+
+                const itemToEdit = result.item;
+                const oldParentArray = result.parentArray;
+                const oldIndex = result.index;
+
+                itemToEdit.name = newName; 
+
+                if (itemToEdit.type === 'link') {
+                    itemToEdit.url = (newUrl && !newUrl.startsWith('http://') && !newUrl.startsWith('https://')) ? `http://${newUrl}` : newUrl;
+                    itemToEdit.description = newDescription || '';
+                } else if (itemToEdit.type === 'note') {
+                    itemToEdit.description = newDescription || '';
+                }
+
+                const currentParentDetails = findParentDetails(id, data); 
+                const currentParentId = currentParentDetails ? currentParentDetails.parentId : null;
+                const effectiveNewParentId = (newParentIdForItem === '') ? null : newParentIdForItem;
+
+                if (newParentIdForItem !== undefined && effectiveNewParentId !== currentParentId) {
+                    if (itemToEdit.type === 'group') {
+                        if (effectiveNewParentId === itemToEdit.id) {
+                            alert("Un grupo no puede ser movido dentro de sí mismo.");
+                            return; 
+                        }
+                        if (effectiveNewParentId) { 
+                            const descendantsOfThisGroup = getDescendantIds(itemToEdit.id);
+                            if (descendantsOfThisGroup.includes(effectiveNewParentId)) {
+                                alert("Un grupo no puede ser movido dentro de uno de sus propios subgrupos.");
+                                return; 
+                            }
+                        }
+                    }
+                    
+                    oldParentArray.splice(oldIndex, 1);
+
+                    if (effectiveNewParentId === null) { 
+                        data.push(itemToEdit);
+                    } else {
+                        const newParentResult = findItemRecursive(effectiveNewParentId);
+                        if (newParentResult && newParentResult.item.type === 'group') {
+                            if (!newParentResult.item.items) newParentResult.item.items = [];
+                            newParentResult.item.items.push(itemToEdit);
+                        } else {
+                            console.warn("editItem (mover): Nuevo padre no encontrado o no es un grupo. Moviendo a la raíz como alternativa.", effectiveNewParentId);
+                            data.push(itemToEdit); 
+                        }
+                    }
+                }
+                saveData();
+                render();
+            }
+
+
+            function deleteItem(itemId) {
+                function removeItem(id, arr) {
+                    for (let i = 0; i < arr.length; i++) {
+                        if (arr[i].id === id) { arr.splice(i, 1); return true; }
+                        if (arr[i].type === 'group' && arr[i].items && removeItem(id, arr[i].items)) return true;
+                    }
+                    return false;
+                }
+                removeItem(itemId, data);
+                saveData();
+                render();
+            }
+
+            function togglePinItem(itemId) {
+                const result = findItemRecursive(itemId);
+                if (result && result.item) {
+                    result.item.isPinned = !result.item.isPinned;
+                    saveData();
+                    render();
+                }
+            }
+
+            function openAllLinksInGroup(groupId) {
+                const groupResult = findItemRecursive(groupId);
+                if (groupResult && groupResult.item.type === 'group' && groupResult.item.items) {
+                    const linksToOpen = groupResult.item.items.filter(item => item.type === 'link' && item.url);
+                    if (linksToOpen.length === 0) {
+                        alert("Este grupo no contiene enlaces para abrir.");
+                        return;
+                    }
+                    if (linksToOpen.length > 5) { 
+                        if (!confirm(`Esto abrirá ${linksToOpen.length} enlaces en nuevas pestañas. ¿Continuar?`)) {
+                            return;
+                        }
+                    }
+                    linksToOpen.forEach(link => {
+                        window.open(link.url, '_blank', 'noopener,noreferrer');
+                    });
+                }
+            }
+
+
+            function handleDragOverBackButton(event) {
+                event.preventDefault(); 
+                if (draggedItemInfo && !backToParentBtn.classList.contains('hidden')) {
+                    backToParentBtn.classList.add('drag-over-target');
+                }
+            }
+            function handleDragLeaveBackButton(event) {
+                backToParentBtn.classList.remove('drag-over-target');
+            }
+            function handleDropOnBackButton(event) {
+                event.preventDefault();
+                backToParentBtn.classList.remove('drag-over-target');
+
+                if (!draggedItemInfo || !draggedItemInfo.id || backToParentBtn.classList.contains('hidden') || currentViewStack.length === 0) {
+                    return;
+                }
+                const itemIdToMove = draggedItemInfo.id;
+                let newParentId = null;
+                if (currentViewStack.length > 1) { 
+                    newParentId = currentViewStack[currentViewStack.length - 2]; 
+                } else if (currentViewStack.length === 1) { 
+                    newParentId = null; 
+                } else {
+                     return; 
+                }
+                const itemResult = findItemRecursive(itemIdToMove);
+                if (!itemResult) {
+                    console.error("Elemento a mover no encontrado en los datos:", itemIdToMove);
+                    return;
+                }
+                const itemToMove = itemResult.item;
+                itemResult.parentArray.splice(itemResult.index, 1);
+                if (newParentId) {
+                    const newParentResult = findItemRecursive(newParentId);
+                    if (newParentResult && newParentResult.item.type === 'group') {
+                        if (!newParentResult.item.items) newParentResult.item.items = [];
+                        newParentResult.item.items.push(itemToMove);
+                    } else {
+                        console.error("Nuevo padre para arrastrar hacia atrás no encontrado o no es un grupo, moviendo a la raíz como alternativa.", newParentId);
+                        data.push(itemToMove); 
+                    }
+                } else { 
+                    data.push(itemToMove);
+                }
+                dropHandledByBackButton = true; 
+                saveData();
+                render(); 
+            }
+            
+            function initializeSortable(element) {
+                if (sortableInstance) {
+                    sortableInstance.destroy();
+                }
+                sortableInstance = new Sortable(element, {
+                    group: 'shared-grid', 
+                    animation: 150,
+                    handle: '.drag-handle',
+                    disabled: !!currentSearchTerm.trim(),
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onStart: function(evt) {
+                        draggedItemInfo = { id: evt.item.dataset.id, element: evt.item };
+                        dropHandledByBackButton = false; 
+                        if (!backToParentBtn.classList.contains('hidden')) {
+                            backToParentBtn.addEventListener('dragover', handleDragOverBackButton);
+                            backToParentBtn.addEventListener('dragleave', handleDragLeaveBackButton);
+                            backToParentBtn.addEventListener('drop', handleDropOnBackButton);
+                        }
+                    },
+                    onMove: function (evt) {
+                        return true; 
+                    },
+                    onEnd: function (evt) {
+                        if (!backToParentBtn.classList.contains('hidden')) { 
+                            backToParentBtn.removeEventListener('dragover', handleDragOverBackButton);
+                            backToParentBtn.removeEventListener('dragleave', handleDragLeaveBackButton);
+                            backToParentBtn.removeEventListener('drop', handleDropOnBackButton);
+                            backToParentBtn.classList.remove('drag-over-target');
+                        }
+
+                        if (dropHandledByBackButton) {
+                            draggedItemInfo = null;
+                            dropHandledByBackButton = false; 
+                            return; 
+                        }
+
+                        const oldIndex = evt.oldDraggableIndex; 
+                        const newIndex = evt.newDraggableIndex; 
+
+                        const currentParentIdForSort = getCurrentParentId();
+                        let itemsArrayToSort;
+                        if (currentParentIdForSort) {
+                            const parentResult = findItemRecursive(currentParentIdForSort);
+                            if (!parentResult || !parentResult.item || !parentResult.item.items) {
+                                render(); 
+                                draggedItemInfo = null;
+                                return;
+                            }
+                            itemsArrayToSort = parentResult.item.items;
+                        } else {
+                            itemsArrayToSort = data;
+                        }
+
+                        if (oldIndex === newIndex && evt.from === evt.to) {
+                            draggedItemInfo = null; 
+                            return;
+                        }
+                        
+                        const newOrderIdsFromDom = Array.from(evt.to.children)
+                                                 .map(child => child.dataset.id)
+                                                 .filter(id => id); 
+
+                        itemsArrayToSort.sort((a, b) => {
+                            let posA = newOrderIdsFromDom.indexOf(a.id);
+                            let posB = newOrderIdsFromDom.indexOf(b.id);
+
+                            if (currentSearchTerm) {
+                                if (posA === -1 && posB === -1) {
+                                    return 0; 
+                                }
+                                if (posA === -1) return 1;
+                                if (posB === -1) return -1;
+                                return posA - posB;
+                            } else {
+                                if (posA === -1) posA = Infinity;
+                                if (posB === -1) posB = Infinity;
+                                return posA - posB;
+                            }
+                        });
+                        
+                        saveData();
+                        render(); 
+                        draggedItemInfo = null; 
+                    },
+                    onUnchoose: function(evt) { 
+                        if (!backToParentBtn.classList.contains('hidden')) {
+                            backToParentBtn.removeEventListener('dragover', handleDragOverBackButton);
+                            backToParentBtn.removeEventListener('dragleave', handleDragLeaveBackButton);
+                            backToParentBtn.removeEventListener('drop', handleDropOnBackButton);
+                            backToParentBtn.classList.remove('drag-over-target');
+                        }
+                        draggedItemInfo = null;
+                    }
+                });
+            }
+
+            function createDOMElement(item, pathInfo = null) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `item ${item.type}-item ${item.isPinned ? 'pinned' : ''}`; 
+                itemDiv.dataset.id = item.id;
+                itemDiv.dataset.type = item.type;
+
+                const dragHandle = document.createElement('span');
+                dragHandle.className = 'drag-handle';
+                dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+                itemDiv.appendChild(dragHandle);
+
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'item-actions-container';
+
+                const pinBtn = document.createElement('button');
+                pinBtn.title = item.isPinned ? 'Desfijar Elemento' : 'Fijar Elemento';
+                pinBtn.innerHTML = `<i class="fas fa-thumbtack"></i>`;
+                pinBtn.classList.add('action-pin');
+                if (item.isPinned) pinBtn.classList.add('pinned'); 
+                pinBtn.onclick = (e) => { e.stopPropagation(); togglePinItem(item.id); };
+                actionsContainer.appendChild(pinBtn);
+                
+                const editBtn = document.createElement('button');
+                editBtn.title = 'Editar';
+                editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+                editBtn.onclick = (e) => { e.stopPropagation(); openModal(item.type, item.id); };
+                actionsContainer.appendChild(editBtn);
+
+                if (item.type === 'group') {
+                    const openAllBtn = document.createElement('button');
+                    openAllBtn.title = 'Abrir todos los enlaces en este grupo';
+                    openAllBtn.innerHTML = '<i class="fas fa-external-link-square-alt"></i>';
+                    openAllBtn.classList.add('action-open-all');
+                    openAllBtn.onclick = (e) => { e.stopPropagation(); openAllLinksInGroup(item.id); };
+                    actionsContainer.appendChild(openAllBtn);
+                    
+                    const addLinkToGroupBtn = document.createElement('button');
+                    addLinkToGroupBtn.title = 'Añadir enlace a este grupo';
+                    addLinkToGroupBtn.innerHTML = '<i class="fas fa-plus-circle"></i>';
+                    addLinkToGroupBtn.classList.add('action-add');
+                    addLinkToGroupBtn.onclick = (e) => { e.stopPropagation(); openModal('link', null, item.id); };
+                    actionsContainer.appendChild(addLinkToGroupBtn);
+
+                    const addSubgroupBtn = document.createElement('button');
+                    addSubgroupBtn.title = 'Añadir subgrupo a este grupo';
+                    addSubgroupBtn.innerHTML = '<i class="fas fa-folder-plus"></i>';
+                    addSubgroupBtn.classList.add('action-add');
+                    addSubgroupBtn.onclick = (e) => { e.stopPropagation(); openModal('group', null, item.id); };
+                    actionsContainer.appendChild(addSubgroupBtn);
+                }
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.title = 'Eliminar';
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteBtn.classList.add('action-delete');
+                deleteBtn.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    let typeName = 'enlace';
+                    if (item.type === 'group') typeName = 'grupo';
+                    if (item.type === 'note') typeName = 'nota';
+                    
+                    if(confirm(`¿Eliminar este ${typeName}?` + (item.type === 'group' ? ' Esto eliminará todo su contenido.' : ''))) {
+                        deleteItem(item.id); 
+                    }
+                };
+                actionsContainer.appendChild(deleteBtn);
+                itemDiv.appendChild(actionsContainer);
+
+                const contentWrapper = document.createElement(item.type === 'link' ? 'a' : 'div');
+                contentWrapper.className = 'item-content-wrapper';
+
+                if (item.type === 'link') {
+                    contentWrapper.href = item.url;
+                    contentWrapper.target = '_blank';
+                    contentWrapper.rel = 'noopener noreferrer';
+                    contentWrapper.onclick = (e) => {
+                        if (e.button === 1 || e.ctrlKey || e.metaKey) return; 
+                    };
+                } else if (item.type === 'note') {
+                     // For notes, clicking acts as "viewing/editing"
+                     contentWrapper.onclick = (e) => {
+                        if (e.target.closest('.item-actions-container') || e.target.closest('.drag-handle')) return;
+                        openModal('note', item.id); // Open modal to read/edit note
+                    };
+                } else { // Group
+                    contentWrapper.onclick = (e) => {
+                        if (e.target.closest('.item-actions-container') || e.target.closest('.drag-handle')) return;
+                        currentViewStack.push(item.id); 
+                        searchInputEl.value = ''; 
+                        currentSearchTerm = '';
+                        render();
+                    };
+                }
+                
+                const nameLineDiv = document.createElement('div');
+                nameLineDiv.className = 'item-name-line';
+
+                const itemIcon = document.createElement('span');
+                itemIcon.className = 'item-icon';
+                
+                if (item.type === 'link') {
+                    if (item.url && typeof item.url === 'string' && item.url.trim() !== '') {
+                        try {
+                            let fullUrl = item.url;
+                            if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+                                fullUrl = 'http://' + fullUrl;
+                            }
+                            const urlObject = new URL(fullUrl);
+                            const faviconImg = document.createElement('img');
+                            faviconImg.className = 'link-favicon';
+                            faviconImg.alt = ''; 
+                            faviconImg.src = `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(urlObject.origin)}&size=18`;
+                            faviconImg.onerror = function() { 
+                                this.remove(); 
+                                const defaultIcon = itemIcon.querySelector('i');
+                                if (!defaultIcon) itemIcon.innerHTML = '<i class="fas fa-link"></i>';
+                            };
+                            itemIcon.appendChild(faviconImg);
+                        } catch (e) { itemIcon.innerHTML = '<i class="fas fa-link"></i>'; }
+                    } else { itemIcon.innerHTML = '<i class="fas fa-link"></i>'; }
+                } else if (item.type === 'note') {
+                     itemIcon.innerHTML = '<i class="fas fa-sticky-note"></i>';
+                } else { // Group
+                    itemIcon.innerHTML = '<i class="fas fa-folder"></i>';
+                }
+                nameLineDiv.appendChild(itemIcon);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'item-name';
+                nameSpan.textContent = item.name;
+                nameLineDiv.appendChild(nameSpan);
+                
+                contentWrapper.appendChild(nameLineDiv);
+
+                // Búsqueda: mostrar en qué carpeta/subcarpeta está el resultado
+                if (pathInfo && pathInfo.names.length > 0) {
+                    const pathDiv = document.createElement('div');
+                    pathDiv.className = 'item-path';
+                    pathDiv.title = 'Ir a: ' + pathInfo.names.join(' / ');
+                    pathDiv.innerHTML = '<i class="fas fa-folder-open"></i>';
+                    const pathText = document.createElement('span');
+                    pathText.textContent = pathInfo.names.join(' / ');
+                    pathDiv.appendChild(pathText);
+                    pathDiv.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentViewStack = [...currentViewStack, ...pathInfo.ids];
+                        searchInputEl.value = '';
+                        currentSearchTerm = '';
+                        render();
+                    };
+                    contentWrapper.appendChild(pathDiv);
+                }
+
+                if (item.type === 'link' && item.description && item.description.trim() !== '') {
+                    const descriptionDiv = document.createElement('div');
+                    descriptionDiv.className = 'link-item-description';
+                    descriptionDiv.textContent = item.description;
+                    contentWrapper.appendChild(descriptionDiv);
+                } else if (item.type === 'note' && item.description && item.description.trim() !== '') {
+                    const descriptionDiv = document.createElement('div');
+                    descriptionDiv.className = 'note-item-description';
+                    descriptionDiv.textContent = item.description;
+                    contentWrapper.appendChild(descriptionDiv);
+                }
+                
+                itemDiv.appendChild(contentWrapper);
+                return itemDiv;
+            }
+            
+            // Quita mayúsculas y acentos para que "camion" encuentre "Camión"
+            function normalizeText(str) {
+                return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            }
+
+            // Busca por nombre en el nivel actual y en TODAS las subcarpetas (recursivo)
+            function collectSearchMatches(items, term, pathNames, pathIds, results, pathMap) {
+                for (const item of items) {
+                    if (normalizeText(item.name).includes(term)) {
+                        results.push(item);
+                        pathMap.set(item.id, { names: [...pathNames], ids: [...pathIds] });
+                    }
+                    if (item.type === 'group' && item.items && item.items.length > 0) {
+                        collectSearchMatches(item.items, term, [...pathNames, item.name], [...pathIds, item.id], results, pathMap);
+                    }
+                }
+            }
+
+            function render() {
+                linkOrganizerEl.innerHTML = ''; 
+                const currentParentId = getCurrentParentId();
+                let itemsToDisplay;
+
+                breadcrumbsContainer.innerHTML = ''; 
+                if (currentViewStack.length > 0) {
+                    breadcrumbsContainer.classList.remove('hidden');
+                    const rootLink = document.createElement('a');
+                    rootLink.href = '#';
+                    rootLink.innerHTML = '<i class="fas fa-home"></i>';
+                    rootLink.title = "Inicio / Raíz";
+                    rootLink.onclick = (e) => { 
+                        e.preventDefault(); 
+                        currentViewStack = []; 
+                        searchInputEl.value = ''; currentSearchTerm = ''; 
+                        render(); 
+                    };
+                    breadcrumbsContainer.appendChild(rootLink);
+                    for (let i = 0; i < currentViewStack.length; i++) {
+                        const groupId = currentViewStack[i];
+                        const groupResult = findItemRecursive(groupId); 
+                        if (groupResult && groupResult.item) {
+                            const separator = document.createElement('span');
+                            separator.className = 'breadcrumb-separator';
+                            separator.textContent = '/';
+                            breadcrumbsContainer.appendChild(separator);
+                            const itemName = groupResult.item.name;
+                            if (i < currentViewStack.length - 1) { 
+                                const groupLink = document.createElement('a');
+                                groupLink.href = '#';
+                                groupLink.title = itemName; 
+                                const groupLinkText = document.createElement('span');
+                                groupLinkText.className = 'breadcrumb-item-text';
+                                groupLinkText.textContent = itemName;
+                                groupLink.appendChild(groupLinkText);
+                                (function(index) { 
+                                    groupLink.onclick = (e) => {
+                                        e.preventDefault();
+                                        currentViewStack = currentViewStack.slice(0, index + 1);
+                                        searchInputEl.value = ''; currentSearchTerm = ''; 
+                                        render();
+                                    };
+                                })(i);
+                                breadcrumbsContainer.appendChild(groupLink);
+                            } else { 
+                                const currentGroupSpan = document.createElement('span');
+                                currentGroupSpan.className = 'breadcrumb-current';
+                                currentGroupSpan.title = itemName;
+                                const currentGroupText = document.createElement('span');
+                                currentGroupText.className = 'breadcrumb-item-text';
+                                currentGroupText.textContent = itemName;
+                                currentGroupSpan.appendChild(currentGroupText);
+                                breadcrumbsContainer.appendChild(currentGroupSpan);
+                            }
+                        } else {
+                            console.warn("Breadcrumb: No se pudo encontrar el grupo con ID:", groupId);
+                            break; 
+                        }
+                    }
+                } else {
+                    breadcrumbsContainer.classList.add('hidden');
+                }
+
+                if (currentParentId) {
+                    const parentResult = findItemRecursive(currentParentId);
+                    if (parentResult && parentResult.item.type === 'group') {
+                        itemsToDisplay = parentResult.item.items || [];
+                        backToParentBtn.classList.remove('hidden');
+                    } else {
+                        console.error("Render: No se pudo encontrar el grupo padre. Navegando a la raíz.");
+                        currentViewStack = []; 
+                        itemsToDisplay = data;
+                        backToParentBtn.classList.add('hidden');
+                        breadcrumbsContainer.classList.add('hidden'); 
+                    }
+                } else {
+                    itemsToDisplay = data; 
+                    backToParentBtn.classList.add('hidden');
+                }
+
+                let filteredItems = itemsToDisplay;
+                const searchPaths = new Map();
+                if (currentSearchTerm.trim()) {
+                    filteredItems = [];
+                    collectSearchMatches(itemsToDisplay, normalizeText(currentSearchTerm.trim()), [], [], filteredItems, searchPaths);
+                }
+                
+                let sortedItems = [...filteredItems]; 
+                const pinned = sortedItems.filter(item => item.isPinned);
+                const unpinned = sortedItems.filter(item => !item.isPinned);
+
+                const sortFunction = (a, b) => {
+                    if (currentSortPreference === 'default') return 0;
+
+                    switch (currentSortPreference) {
+                        case 'name_asc':
+                            return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+                        case 'name_desc':
+                            return b.name.localeCompare(a.name, 'es', { sensitivity: 'base' });
+                        case 'date_new':
+                            return (b.createdAt || 0) - (a.createdAt || 0);
+                        case 'date_old':
+                            return (a.createdAt || 0) - (b.createdAt || 0);
+                        default:
+                            return 0; 
+                    }
+                };
+                
+                if (currentSortPreference !== 'default') {
+                    pinned.sort(sortFunction);
+                    unpinned.sort(sortFunction);
+                }
+                const itemsToRender = [...pinned, ...unpinned];
+
+
+                if (itemsToRender.length === 0) {
+                    const message = document.createElement('p');
+                    message.className = 'no-items-message';
+                    if (currentSearchTerm.trim()) {
+                        message.textContent = 'No hay elementos que coincidan con tu búsqueda.';
+                    } else if (itemsToDisplay.length > 0 && filteredItems.length === 0) { 
+                        message.textContent = 'No hay elementos que coincidan con tu búsqueda.';
+                    }
+                    else {
+                        message.textContent = 'No hay elementos aquí. ¡Añade algunos enlaces, notas o grupos!';
+                    }
+                    linkOrganizerEl.appendChild(message);
+                } else {
+                    itemsToRender.forEach(item => {
+                        const element = createDOMElement(item, searchPaths.get(item.id) || null);
+                        if (element) linkOrganizerEl.appendChild(element);
+                    });
+                }
+
+
+                initializeSortable(linkOrganizerEl); 
+                updateRootVarRgbEquivalents(); 
+            };
+            
+            backToParentBtn.onclick = () => {
+                if (currentViewStack.length > 0) {
+                    currentViewStack.pop(); 
+                    searchInputEl.value = ''; 
+                    currentSearchTerm = '';
+                    render();
+                }
+            };
+            
+            function populateGroupSelector(selectElement, currentParentIdOfItem, excludedIds = []) {
+                selectElement.innerHTML = ''; 
+                const rootOption = document.createElement('option');
+                rootOption.value = ''; 
+                rootOption.textContent = 'Inicio (Raíz)'; 
+                if (currentParentIdOfItem === null || currentParentIdOfItem === '') {
+                    rootOption.selected = true;
+                }
+                selectElement.appendChild(rootOption);
+                const indentUnit = '\u00A0\u00A0\u00A0'; 
+                function addGroupOptionsRecursive(groupsToScan, indentLevel) {
+                    groupsToScan.forEach(item => {
+                        if (item.type === 'group') {
+                            const option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = indentUnit.repeat(indentLevel) + item.name; 
+                            if (indentLevel === 0) { option.style.fontWeight = 'bold'; } 
+                            else { option.style.fontWeight = 'normal'; }
+                            if (item.id === currentParentIdOfItem) { option.selected = true; }
+                            if (excludedIds.includes(item.id)) { option.disabled = true; }
+                            selectElement.appendChild(option);
+                            if (item.items && item.items.length > 0 && !excludedIds.includes(item.id)) {
+                                addGroupOptionsRecursive(item.items, indentLevel + 1);
+                            }
+                        }
+                    });
+                }
+                addGroupOptionsRecursive(data, 0); 
+            }
+
+            function openModal(type, id = null, explicitParentId = null) {
+                mainMenuDropdown.classList.remove('show'); 
+                modalItemType.value = type;
+                modalItemId.value = id || '';
+                
+                const actualParentId = explicitParentId !== null ? explicitParentId : getCurrentParentId();
+                modalParentIdInput.value = actualParentId || '';
+
+                modalUrlContainer.style.display = 'none';
+                modalDescriptionContainer.style.display = 'none';
+                modalMoveToGroupContainer.style.display = 'none'; 
+                
+                // Reset labels
+                modalNameLabel.textContent = "Nombre:";
+                modalDescriptionLabel.textContent = "Descripción:";
+
+                if (id) { // Editing an existing item
+                    const result = findItemRecursive(id);
+                    if (!result) return;
+                    
+                    modalItemName.value = result.item.name;
+
+                    if (type === 'link') {
+                        modalTitle.textContent = "Editar Enlace";
+                        modalItemUrl.value = result.item.url;
+                        modalItemDescription.value = result.item.description || '';
+                        modalUrlContainer.style.display = 'block';
+                        modalDescriptionContainer.style.display = 'block';
+                        
+                        modalMoveToGroupContainer.style.display = 'block';
+                        const linkDetails = findParentDetails(id, data); 
+                        const currentParentOfLink = linkDetails ? linkDetails.parentId : null;
+                        populateGroupSelector(modalItemGroupSelector, currentParentOfLink); 
+
+                    } else if (type === 'note') {
+                        modalTitle.textContent = "Editar Nota";
+                        modalItemDescription.value = result.item.description || '';
+                        modalDescriptionContainer.style.display = 'block';
+                        modalDescriptionLabel.textContent = "Contenido de la nota:"; 
+                        
+                        modalMoveToGroupContainer.style.display = 'block';
+                        const noteDetails = findParentDetails(id, data);
+                        const currentParentOfNote = noteDetails ? noteDetails.parentId : null;
+                        populateGroupSelector(modalItemGroupSelector, currentParentOfNote);
+
+                    } else if (type === 'group') {
+                        modalTitle.textContent = "Editar Grupo";
+                        modalMoveToGroupContainer.style.display = 'block';
+
+                        const groupDetails = findParentDetails(id, data);
+                        const currentParentOfGroup = groupDetails ? groupDetails.parentId : null;
+                        const excludedIdsForGroupMove = [id, ...getDescendantIds(id)]; 
+                        populateGroupSelector(modalItemGroupSelector, currentParentOfGroup, excludedIdsForGroupMove);
+                    } 
+                } else { // Adding a new item
+                    let titleText; 
+                    if (type === 'link') {
+                        titleText = 'Añadir Nuevo Enlace';
+                        modalUrlContainer.style.display = 'block';
+                        modalDescriptionContainer.style.display = 'block';
+                        modalItemUrl.value = '';
+                        modalItemDescription.value = '';
+                    } else if (type === 'note') {
+                        titleText = 'Añadir Nueva Nota';
+                        modalDescriptionContainer.style.display = 'block';
+                        modalDescriptionLabel.textContent = "Contenido de la nota:";
+                        modalItemDescription.value = '';
+                        modalItemUrl.value = ''; // Ensure cleared
+                    } else if (type === 'group') {
+                        titleText = 'Añadir Nuevo Grupo';
+                    }
+                    
+                    if (actualParentId) {
+                        const parentGroup = findItemRecursive(actualParentId)?.item;
+                        if (parentGroup) titleText += ` a "${parentGroup.name}"`;
+                    }
+                    
+                    modalTitle.textContent = titleText;
+                    modalItemName.value = '';
+                }
+                itemModal.style.display = 'block';
+                modalItemName.focus();
+            }
+
+            function closeModal() { itemModal.style.display = 'none'; }
+
+            saveModalItemBtn.onclick = () => {
+                const type = modalItemType.value;
+                const name = modalItemName.value.trim();
+                const url = modalItemUrl.value.trim();
+                const description = modalItemDescription.value.trim();
+                const id = modalItemId.value;
+                const parentForNewItem = modalParentIdInput.value; 
+
+                if (!name) { alert('El nombre es obligatorio.'); return; }
+                if (type === 'link' && !url) { 
+                     alert('La URL es obligatoria para un enlace.'); return;
+                }
+
+                if (id) { 
+                    let newParentIdForItem = undefined;
+                    if (modalMoveToGroupContainer.style.display === 'block') { 
+                        newParentIdForItem = modalItemGroupSelector.value; 
+                    }
+                    editItem(id, name, (type === 'link' ? url : undefined), ((type === 'link' || type === 'note') ? description : undefined), newParentIdForItem);
+                }
+                else { 
+                    // Add item
+                    addItem(type, name, url, parentForNewItem || null, null, undefined, null, ((type === 'link' || type === 'note') ? description : null));
+                }
+                closeModal();
+            };
+            
+            [modalItemName, modalItemUrl, modalItemDescription].forEach(inputElement => {
+                if (inputElement) { 
+                    inputElement.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter') {
+                            if (inputElement.tagName === 'TEXTAREA') {
+                                return; // Allow new lines in textarea (important for notes)
+                            }
+                            event.preventDefault(); 
+                            saveModalItemBtn.click(); 
+                        }
+                    });
+                }
+            });
+
+            mainMenuToggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                mainMenuDropdown.classList.toggle('show');
+                hideContextMenu();
+            };
+            document.addEventListener('click', (e) => {
+                if (!mainMenuToggleBtn.contains(e.target) && !mainMenuDropdown.contains(e.target) &&
+                    customContextMenuEl && !customContextMenuEl.contains(e.target)) { 
+                    mainMenuDropdown.classList.remove('show');
+                    hideContextMenu();
+                } else if (customContextMenuEl && !customContextMenuEl.contains(e.target) && customContextMenuEl.style.display === 'block') { 
+                     hideContextMenu();
+                }
+            });
+
+            let currentToggleThemeFn = () => { 
+                document.documentElement.classList.toggle('light-mode');
+                const isLight = document.documentElement.classList.contains('light-mode');
+                localStorage.setItem('linkCentralTheme', isLight ? 'light' : 'dark');
+                mainMenuDropdown.classList.remove('show'); 
+                updateRootVarRgbEquivalents(); 
+                if (colorCustomizationModal.style.display === 'block') {
+                    openColorCustomizationModal(); 
+                }
+            };
+            
+            let currentApplyInitialThemeFn = () => { 
+                const savedTheme = localStorage.getItem('linkCentralTheme');
+                if (savedTheme === 'light') {
+                    document.documentElement.classList.add('light-mode');
+                } else {
+                    document.documentElement.classList.remove('light-mode'); 
+                }
+                updateRootVarRgbEquivalents(); 
+            };
+
+            const CUSTOM_COLORS_STORAGE_KEY = 'linkCentralCustomColors_v1';
+            const colorCustomizationModal = document.getElementById('colorCustomizationModal');
+            const colorInputsContainer = document.getElementById('colorInputsContainer');
+            const saveColorsBtn = document.getElementById('saveColorsBtn');
+            const resetColorsBtn = document.getElementById('resetColorsBtn');
+
+            const customizableColorVariables = [
+                { varName: '--bg-primary', label: 'Fondo Principal', defaultDark: '#1e202b', defaultLight: '#f4f7f6' },
+                { varName: '--bg-secondary', label: 'Fondo de Elementos', defaultDark: '#2b2e3d', defaultLight: '#ffffff' },
+                { varName: '--bg-header', label: 'Fondo de Cabecera', defaultDark: '#161820', defaultLight: '#e9edf1' },
+                { varName: '--text-primary', label: 'Texto Principal', defaultDark: '#e0e0e0', defaultLight: '#212529' },
+                { varName: '--text-secondary', label: 'Texto Secundario', defaultDark: '#b0b0b0', defaultLight: '#495057' },
+                { varName: '--accent-primary', label: 'Acento Primario', defaultDark: '#4a90e2', defaultLight: '#007bff' },
+                { varName: '--accent-secondary', label: 'Acento Secundario', defaultDark: '#50e3c2', defaultLight: '#28a745' },
+                { varName: '--danger', label: 'Peligro/Eliminar', defaultDark: '#e94b3c', defaultLight: '#dc3545' },
+                { varName: '--border-color', label: 'Color de Borde', defaultDark: '#3a3f51', defaultLight: '#dee2e6' },
+                { varName: '--pin-color', label: 'Color de Acento de Fijado', defaultDark: '#50e3c2', defaultLight: '#28a745' }, 
+            ];
+
+            function getThemeDefaultColor(varName) {
+                const isLight = document.documentElement.classList.contains('light-mode');
+                const colorDef = customizableColorVariables.find(c => c.varName === varName);
+                if (!colorDef) return '#000000'; 
+                return isLight ? colorDef.defaultLight : colorDef.defaultDark;
+            }
+
+            function applyCustomColorsToDOM(colors) {
+                if (!colors) return;
+                customizableColorVariables.forEach(config => {
+                    if (colors[config.varName]) {
+                        document.documentElement.style.setProperty(config.varName, colors[config.varName]);
+                    } else {
+                        document.documentElement.style.removeProperty(config.varName);
+                    }
+                });
+                updateRootVarRgbEquivalents(); 
+            }
+
+            function loadAndApplyCustomColors() {
+                const storedColors = localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY);
+                const parsedColors = storedColors ? JSON.parse(storedColors) : null;
+                
+                customizableColorVariables.forEach(config => {
+                    document.documentElement.style.removeProperty(config.varName);
+                });
+                
+                if (parsedColors) {
+                    applyCustomColorsToDOM(parsedColors);
+                }
+                updateRootVarRgbEquivalents(); 
+                return parsedColors;
+            }
+
+            function openColorCustomizationModal() {
+                mainMenuDropdown.classList.remove('show'); 
+                colorInputsContainer.innerHTML = ''; 
+                const currentCustomColors = JSON.parse(localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY)) || {};
+                
+                customizableColorVariables.forEach(config => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'color-input-wrapper';
+                    const label = document.createElement('label');
+                    label.textContent = config.label;
+                    label.htmlFor = `color-picker-${config.varName}`;
+                    const input = document.createElement('input');
+                    input.type = 'color';
+                    input.id = `color-picker-${config.varName}`;
+                    input.dataset.varName = config.varName;
+                    input.value = currentCustomColors[config.varName] || getThemeDefaultColor(config.varName);
+                    
+                    input.addEventListener('input', (event) => { 
+                        document.documentElement.style.setProperty(config.varName, event.target.value);
+                        if (config.varName === '--bg-secondary') { 
+                            updateRootVarRgbEquivalents();
+                        }
+                    });
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    colorInputsContainer.appendChild(wrapper);
+                });
+                colorCustomizationModal.style.display = 'block';
+            }
+
+            function closeColorCustomizationModal() {
+                colorCustomizationModal.style.display = 'none';
+                loadAndApplyCustomColors(); 
+            }
+
+            saveColorsBtn.onclick = () => {
+                const newColors = {};
+                colorInputsContainer.querySelectorAll('input[type="color"]').forEach(input => {
+                    newColors[input.dataset.varName] = input.value;
+                });
+                localStorage.setItem(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(newColors));
+                applyCustomColorsToDOM(newColors); 
+                colorCustomizationModal.style.display = 'none';
+            };
+
+            resetColorsBtn.onclick = () => {
+                if (!confirm("¿Estás seguro de que quieres restablecer todos los colores a los predeterminados del tema? Esto eliminará tu configuración de colores personalizados.")) return;
+                localStorage.removeItem(CUSTOM_COLORS_STORAGE_KEY);
+                customizableColorVariables.forEach(config => {
+                    document.documentElement.style.removeProperty(config.varName); 
+                });
+                updateRootVarRgbEquivalents(); 
+                openColorCustomizationModal(); 
+            };
+
+            const originalToggleTheme = currentToggleThemeFn;
+            currentToggleThemeFn = () => {
+                originalToggleTheme(); 
+                loadAndApplyCustomColors(); 
+                if (colorCustomizationModal.style.display === 'block') { 
+                    openColorCustomizationModal(); 
+                }
+                mainMenuDropdown.classList.remove('show');
+            };
+
+            const originalApplyInitialTheme = currentApplyInitialThemeFn;
+            currentApplyInitialThemeFn = () => {
+                originalApplyInitialTheme(); 
+                loadAndApplyCustomColors(); 
+            };
+            
+            function showContextMenu(event, targetType, targetId, targetElement) {
+                event.preventDefault();
+                hideContextMenu(); 
+                contextMenuMouseX = event.clientX;
+                contextMenuMouseY = event.clientY;
+                const menuUl = customContextMenuEl.querySelector('ul');
+                menuUl.innerHTML = ''; 
+                let menuItems = [];
+                const itemResult = (['link', 'group', 'note'].includes(targetType)) ? findItemRecursive(targetId) : null;
+                const itemData = itemResult ? itemResult.item : null;
+
+
+                if (targetType === 'link' && itemData) {
+                    menuItems = [
+                        { label: itemData.isPinned ? 'Desfijar Enlace' : 'Fijar Enlace', icon: 'fas fa-thumbtack', action: 'toggle-pin', itemId: targetId },
+                        { type: 'separator' },
+                        { label: 'Editar Enlace', icon: 'fas fa-pencil-alt', action: 'edit-link', itemId: targetId },
+                        { label: 'Copiar URL del Enlace', icon: 'fas fa-copy', action: 'copy-link-url', itemId: targetId, url: itemData.url },
+                        { type: 'separator' },
+                        { label: 'Copiar Elemento', icon: 'fas fa-clone', action: 'copy-item', itemType: 'link', itemId: targetId },
+                        { label: 'Eliminar Enlace', icon: 'fas fa-trash-alt', action: 'delete-link', itemId: targetId }
+                    ];
+                } else if (targetType === 'note' && itemData) {
+                    menuItems = [
+                        { label: itemData.isPinned ? 'Desfijar Nota' : 'Fijar Nota', icon: 'fas fa-thumbtack', action: 'toggle-pin', itemId: targetId },
+                        { type: 'separator' },
+                        { label: 'Ver/Editar Nota', icon: 'fas fa-pencil-alt', action: 'edit-note', itemId: targetId },
+                        { label: 'Copiar Texto', icon: 'fas fa-copy', action: 'copy-note-text', itemId: targetId, description: itemData.description },
+                        { type: 'separator' },
+                        { label: 'Copiar Elemento', icon: 'fas fa-clone', action: 'copy-item', itemType: 'note', itemId: targetId },
+                        { label: 'Eliminar Nota', icon: 'fas fa-trash-alt', action: 'delete-note', itemId: targetId }
+                    ];
+                } else if (targetType === 'group' && itemData) {
+                     menuItems = [
+                        { label: itemData.isPinned ? 'Desfijar Grupo' : 'Fijar Grupo', icon: 'fas fa-thumbtack', action: 'toggle-pin', itemId: targetId },
+                        { type: 'separator' },
+                        { label: 'Editar Grupo', icon: 'fas fa-pencil-alt', action: 'edit-group', itemId: targetId },
+                        { label: 'Abrir Todos los Enlaces', icon: 'fas fa-external-link-square-alt', action: 'open-all-links', itemId: targetId, disabled: !(itemData.items && itemData.items.some(i => i.type === 'link')) },
+                        { type: 'separator' },
+                        { label: 'Copiar Grupo', icon: 'fas fa-clone', action: 'copy-item', itemType: 'group', itemId: targetId },
+                        { label: 'Eliminar Grupo', icon: 'fas fa-trash-alt', action: 'delete-group', itemId: targetId }
+                    ];
+                } else if (targetType === 'link-organizer-area') {
+                    const currentParentActive = getCurrentParentId(); 
+                    if (currentParentActive) { 
+                        menuItems.push({ label: 'Subir un Nivel', icon: 'fas fa-level-up-alt', action: 'go-up-level', disabled: false });
+                    } else { 
+                         menuItems.push({ label: 'Subir un Nivel', icon: 'fas fa-level-up-alt', action: 'go-up-level', disabled: true });
+                    }
+
+                    if (copiedItemData && ['link', 'group', 'note'].includes(copiedItemType)) {
+                        if (menuItems.length > 0 && menuItems[menuItems.length -1].type !== 'separator') { 
+                            menuItems.push({ type: 'separator' });
+                        }
+                        const pasteLabel = `Pegar ${copiedItemType === 'link' ? 'Enlace' : (copiedItemType === 'note' ? 'Nota' : 'Grupo')}`;
+                        menuItems.push({ label: pasteLabel, icon: 'fas fa-paste', action: 'paste-item', disabled: false });
+                    } else {
+                         if (menuItems.length > 0 && menuItems[menuItems.length -1].type !== 'separator') { 
+                            menuItems.push({ type: 'separator' });
+                        }
+                        menuItems.push({ label: `Pegar Elemento`, icon: 'fas fa-paste', action: 'paste-item', disabled: true });
+                    }
+                }
+                
+                if (targetType === 'group' && itemData) { 
+                    if (copiedItemData && ['link', 'group', 'note'].includes(copiedItemType)) {
+                        if (menuItems.length > 0 && menuItems[menuItems.length-1].type !== 'separator') {
+                             menuItems.push({ type: 'separator' });
+                        }
+                        const pasteHereLabel = `Pegar ${copiedItemType === 'link' ? 'Enlace' : (copiedItemType === 'note' ? 'Nota' : 'Grupo')} Aquí`;
+                        menuItems.push({ label: pasteHereLabel, icon: 'fas fa-paste', action: 'paste-item-into-group', disabled: false, targetGroupId: targetId });
+                    } else {
+                         if (menuItems.length > 0 && menuItems[menuItems.length-1].type !== 'separator') {
+                             menuItems.push({ type: 'separator' });
+                        }
+                        menuItems.push({ label: `Pegar Elemento Aquí`, icon: 'fas fa-paste', action: 'paste-item-into-group', disabled: true, targetGroupId: targetId });
+                    }
+                }
+
+                menuItems.forEach(item => {
+                    const li = document.createElement('li');
+                    if (item.type === 'separator') {
+                        li.className = 'separator';
+                    } else {
+                        let content = '';
+                        if (item.icon && typeof item.icon === 'string' && item.icon.trim() !== '') {
+                            content += `<i class="${item.icon}"></i> `;
+                        }
+                        content += item.label;
+                        li.innerHTML = content;
+                        li.dataset.action = item.action;
+                        if(item.itemId) li.dataset.itemId = item.itemId;
+                        if(item.url) li.dataset.url = item.url;
+                        if(item.description) li.dataset.description = item.description;
+                        if(item.itemType) li.dataset.itemType = item.itemType; 
+                        if(item.targetGroupId) li.dataset.targetGroupId = item.targetGroupId; 
+                        if(item.disabled) li.classList.add('disabled');
+                    }
+                    menuUl.appendChild(li);
+                });
+                
+                if (menuUl.children.length === 0) return; 
+                const { clientX: mouseX, clientY: mouseY } = event;
+                customContextMenuEl.style.top = `${mouseY}px`; customContextMenuEl.style.left = `${mouseX}px`;
+                const menuWidth = customContextMenuEl.offsetWidth, menuHeight = customContextMenuEl.offsetHeight;
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+                if (mouseX + menuWidth > viewportWidth) {
+                    customContextMenuEl.style.left = `${Math.max(0, viewportWidth - menuWidth - 5)}px`;
+                }
+                if (mouseY + menuHeight > viewportHeight) {
+                    customContextMenuEl.style.top = `${Math.max(0, viewportHeight - menuHeight - 5)}px`;
+                }
+                customContextMenuEl.style.display = 'block';
+            }
+            function hideContextMenu() { if (customContextMenuEl) customContextMenuEl.style.display = 'none'; }
+            function assignNewIdsRecursive(itemsToProcess) { 
+                return itemsToProcess.map(originalItem => {
+                    const newItem = { ...originalItem, id: generateId(), createdAt: Date.now() }; 
+                    if (originalItem.isPinned === undefined) newItem.isPinned = false; 
+                    if (newItem.type === 'group' && newItem.items && newItem.items.length > 0) {
+                        newItem.items = assignNewIdsRecursive(newItem.items);
+                    }
+                    return newItem;
+                });
+            }
+            customContextMenuEl.addEventListener('click', (event) => {
+                const targetLi = event.target.closest('li');
+                if (!targetLi || !targetLi.dataset.action || targetLi.classList.contains('disabled')) return;
+                const action = targetLi.dataset.action;
+                const itemId = targetLi.dataset.itemId;
+                hideContextMenu();
+
+                if (action === 'toggle-pin') togglePinItem(itemId); 
+                else if (action === 'edit-link') openModal('link', itemId);
+                else if (action === 'edit-note') openModal('note', itemId);
+                else if (action === 'copy-link-url') navigator.clipboard.writeText(targetLi.dataset.url).catch(err => console.error('Error al copiar URL: ', err));
+                else if (action === 'copy-note-text') navigator.clipboard.writeText(targetLi.dataset.description).catch(err => console.error('Error al copiar texto: ', err));
+                else if (action === 'delete-link') if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) deleteItem(itemId);
+                else if (action === 'delete-note') if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) deleteItem(itemId);
+                else if (action === 'copy-item') {
+                    const itemTypeToCopy = targetLi.dataset.itemType; 
+                    if (['link', 'group', 'note'].includes(itemTypeToCopy)) {
+                        const result = findItemRecursive(itemId);
+                        if (result) { copiedItemData = JSON.parse(JSON.stringify(result.item)); copiedItemType = itemTypeToCopy; }
+                    }
+                } else if (action === 'paste-item' || action === 'paste-item-into-group') { 
+                    if (!copiedItemData || !['link', 'group', 'note'].includes(copiedItemType)) return;
+                    
+                    const itemToPaste = JSON.parse(JSON.stringify(copiedItemData)); 
+                    const [pastedItemWithNewIds] = assignNewIdsRecursive([itemToPaste]); 
+                    
+                    let actualPasteParentId;
+                    if (action === 'paste-item-into-group') {
+                        actualPasteParentId = targetLi.dataset.targetGroupId;
+                    } else { 
+                        actualPasteParentId = getCurrentParentId(); 
+                    }
+                    addItem(
+                        pastedItemWithNewIds.type, pastedItemWithNewIds.name, pastedItemWithNewIds.url,
+                        actualPasteParentId, pastedItemWithNewIds.id,
+                        pastedItemWithNewIds.isCollapsed, pastedItemWithNewIds.items,
+                        (pastedItemWithNewIds.type === 'link' || pastedItemWithNewIds.type === 'note') ? pastedItemWithNewIds.description : null
+                    );
+                } else if (action === 'edit-group') openModal('group', itemId);
+                else if (action === 'delete-group') if (confirm('¿Estás seguro de que quieres eliminar este grupo y todo su contenido?')) deleteItem(itemId);
+                else if (action === 'go-up-level') { 
+                    if (currentViewStack.length > 0) { 
+                        backToParentBtn.click(); 
+                    }
+                } else if (action === 'open-all-links') openAllLinksInGroup(itemId); 
+            });
+            linkOrganizerEl.addEventListener('contextmenu', (event) => {
+                const targetItemDiv = event.target.closest('.item');
+                if (targetItemDiv) { 
+                    const itemId = targetItemDiv.dataset.id;
+                    const itemType = targetItemDiv.dataset.type;
+                    showContextMenu(event, itemType, itemId, targetItemDiv);
+                } else if (event.target === linkOrganizerEl || linkOrganizerEl.contains(event.target)) {
+                     if (event.target === linkOrganizerEl || event.target.classList.contains('no-items-message')) {
+                        showContextMenu(event, 'link-organizer-area', null, linkOrganizerEl);
+                     }
+                }
+            });
+
+            function exportAllData() {
+                mainMenuDropdown.classList.remove('show'); hideContextMenu();
+                const currentTheme = localStorage.getItem('linkCentralTheme') || 'dark';
+                const customColors = JSON.parse(localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY) || '{}');
+                const sortPref = currentSortPreference; 
+                const exportObject = {
+                    version: "2.1.0-notes", 
+                    linkData: data,
+                    theme: currentTheme, 
+                    customColors: customColors,
+                    sortPreference: sortPref 
+                };
+                const dataStr = JSON.stringify(exportObject, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileDefaultName = 'copia_seguridad_linkcentral.json';
+                let linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri); linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click(); linkElement.remove();
+                alert('¡Datos exportados!');
+            }
+            function importAllData(event) {
+                mainMenuDropdown.classList.remove('show'); hideContextMenu();
+                const file = event.target.files[0]; if (!file) return;
+                if (!confirm('Importar datos sobrescribirá TODOS los datos y configuraciones actuales de enlaces/grupos. ¿Estás seguro?')) {
+                    event.target.value = null; return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!imported || typeof imported.linkData === 'undefined') { 
+                            alert('Error: Formato de archivo no válido o faltan linkData.'); return;
+                        }
+                        data = imported.linkData || [];
+                        ensureItemProperties(data); 
+                        saveData();
+                        
+                        const themeToApply = imported.theme === 'light' ? 'light' : 'dark';
+                        localStorage.setItem('linkCentralTheme', themeToApply);
+                        if (imported.customColors && Object.keys(imported.customColors).length > 0) {
+                            localStorage.setItem(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(imported.customColors));
+                        } else { localStorage.removeItem(CUSTOM_COLORS_STORAGE_KEY); }
+                        
+                        if (imported.sortPreference) {
+                            currentSortPreference = imported.sortPreference;
+                            localStorage.setItem(SORT_PREF_KEY, currentSortPreference);
+                            sortOptionsEl.value = currentSortPreference;
+                        } else { 
+                             currentSortPreference = 'default'; 
+                             localStorage.setItem(SORT_PREF_KEY, currentSortPreference);
+                             sortOptionsEl.value = currentSortPreference;
+                        }
+
+                        currentViewStack = []; 
+                        searchInputEl.value = ''; currentSearchTerm = ''; 
+                        currentApplyInitialThemeFn(); 
+                        render(); 
+                        alert('¡Datos importados correctamente!');
+                    } catch (error) {
+                        console.error("Error al importar datos:", error);
+                        alert('Error al importar datos: ' + error.message);
+                    } finally { event.target.value = null; } 
+                };
+                reader.onerror = function() { alert('Error al leer el archivo.'); event.target.value = null; };
+                reader.readAsText(file);
+            }
+            
+            document.getElementById('showAddLinkModalBtn').onclick = () => openModal('link', null, getCurrentParentId()); 
+            document.getElementById('showAddNoteModalBtn').onclick = () => openModal('note', null, getCurrentParentId());
+            document.getElementById('showAddGroupModalBtn').onclick = () => openModal('group', null, getCurrentParentId()); 
+            if (exportDataBtn) exportDataBtn.onclick = exportAllData;
+            if (importFileEl) importFileEl.onchange = importAllData; 
+
+            searchInputEl.addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value;
+                render();
+            });
+            searchInputEl.addEventListener('search', (e) => { 
+                if (!e.target.value) {
+                    currentSearchTerm = '';
+                    render();
+                }
+            });
+
+            sortOptionsEl.addEventListener('change', (e) => {
+                currentSortPreference = e.target.value;
+                localStorage.setItem(SORT_PREF_KEY, currentSortPreference);
+                render();
+            });
+            
+            [itemModal, colorCustomizationModal].forEach(modalInstance => {
+                if (modalInstance) {
+                    modalInstance.addEventListener('click', (event) => {
+                        let dismissSelector = '[data-dismiss="modal"]';
+                        if (event.target === modalInstance || (dismissSelector && event.target.closest(dismissSelector))) {
+                            if (modalInstance === itemModal) closeModal();
+                            else if (modalInstance === colorCustomizationModal) closeColorCustomizationModal();
+                        }
+                    });
+                }
+            });
+            document.addEventListener('keydown', (event) => { 
+                if (event.key === 'Escape') {
+                    if (customContextMenuEl.style.display === 'block') hideContextMenu();
+                    else if (mainMenuDropdown.classList.contains('show')) mainMenuDropdown.classList.remove('show');
+                    else if (itemModal.style.display === 'block') closeModal();
+                    else if (colorCustomizationModal && colorCustomizationModal.style.display === 'block') closeColorCustomizationModal();
+                    else if (currentSearchTerm && document.activeElement !== searchInputEl) { 
+                        searchInputEl.value = '';
+                        currentSearchTerm = '';
+                        render();
+                        searchInputEl.blur(); 
+                    }
+                    else if (currentViewStack.length > 0 && !backToParentBtn.classList.contains('hidden') && sortableInstance && !sortableInstance.el.querySelector('.sortable-drag')) { 
+                        backToParentBtn.click();
+                    }
+                }
+            });
+
+            currentApplyInitialThemeFn(); 
+            loadData(); 
+        });
+    </script>
+</body>
+</html>
