@@ -723,6 +723,526 @@
         #customContextMenu li.disabled { color: var(--text-secondary); cursor: default; pointer-events: none; }
         #customContextMenu li.disabled:hover { background-color: transparent; }
 
+        /* =====================================================
+           ANIMACIONES DINÁMICAS
+           ===================================================== */
+        :root {
+            --ease-out: cubic-bezier(.22, 1, .36, 1);
+            --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes itemIn      { from { opacity: 0; transform: translateY(18px) scale(.94); } to { opacity: 1; transform: none; } }
+        @keyframes itemInRight { from { opacity: 0; transform: translateX(32px) scale(.96); } to { opacity: 1; transform: none; } }
+        @keyframes itemInLeft  { from { opacity: 0; transform: translateX(-32px) scale(.96); } to { opacity: 1; transform: none; } }
+        @keyframes fadeIn      { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalPop    { from { opacity: 0; transform: translateY(34px) scale(.9); } to { opacity: 1; transform: none; } }
+        @keyframes menuPop     { from { opacity: 0; transform: scale(.85) translateY(-6px); } to { opacity: 1; transform: none; } }
+        @keyframes popIn       { from { opacity: 0; transform: scale(.3) rotate(-90deg); } to { opacity: 1; transform: none; } }
+        @keyframes headerIn    { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: none; } }
+        @keyframes crumbIn     { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+        @keyframes menuItemIn  { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+        @keyframes rippleOut   { from { transform: scale(0); opacity: .9; } to { transform: scale(1); opacity: 0; } }
+        @keyframes ghostPulse  { 50% { border-color: var(--accent-secondary); } }
+
+        /* Cabecera */
+        .app-header { animation: headerIn .6s var(--ease-out) backwards; }
+
+        .header-action-button {
+            transition: color .2s, border-color .2s, background-color .2s, box-shadow .25s,
+                        transform .3s var(--ease-spring);
+        }
+        .header-action-button:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 4px 12px var(--accent-primary-transparent);
+        }
+        .header-action-button:active { transform: scale(.9); }
+        .header-action-button i { transition: transform .35s var(--ease-spring); }
+        .header-action-button:hover i { transform: rotate(-12deg) scale(1.12); }
+
+        #backToParentBtn:not(.hidden) { animation: popIn .4s var(--ease-spring); }
+        #backToParentBtn:hover { transform: translateX(-2px); }
+        #backToParentBtn i { transition: transform .25s var(--ease-out); }
+        #backToParentBtn:hover i { transform: translateX(-3px); }
+
+        .breadcrumbs-container.crumbs-enter > * {
+            animation: crumbIn .4s var(--ease-out) backwards;
+            animation-delay: calc(var(--c, 0) * 45ms);
+        }
+
+        #searchInput { transition: width .4s var(--ease-out), border-color .2s, box-shadow .25s; }
+        #sortOptions { transition: border-color .2s, box-shadow .25s, transform .2s var(--ease-spring); }
+        #sortOptions:hover { transform: translateY(-1px); }
+        #sortOptions:focus { box-shadow: 0 0 0 2px var(--accent-primary-transparent); }
+
+        /* Menú desplegable */
+        .main-menu-dropdown { transform: translateY(-10px) scale(.95); transform-origin: top right; }
+        .main-menu-dropdown.show {
+            transform: none;
+            transition: opacity .25s var(--ease-out), max-height .3s var(--ease-out),
+                        visibility 0s linear 0s, transform .4s var(--ease-spring);
+        }
+        .main-menu-dropdown.show > button,
+        .main-menu-dropdown.show > label {
+            animation: menuItemIn .35s var(--ease-out) backwards;
+            animation-delay: calc(var(--n, 0) * 60ms + 80ms);
+        }
+        .main-menu-dropdown.show > :nth-child(2) { --n: 1; }
+        .main-menu-dropdown.show > :nth-child(3) { --n: 2; }
+        .main-menu-dropdown button i, .main-menu-dropdown .import-label-button i { transition: transform .3s var(--ease-spring); }
+        .main-menu-dropdown button:hover i, .main-menu-dropdown .import-label-button:hover i { transform: scale(1.25) rotate(-8deg); }
+
+        /* Tarjetas */
+        .item {
+            transition: transform .35s var(--ease-spring), box-shadow .3s var(--ease-out),
+                        border-color .25s, background-color .25s;
+        }
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 26px var(--shadow-color), 0 0 0 1px var(--accent-primary-transparent);
+        }
+        .item:has(.item-content-wrapper:active) { transform: translateY(-1px) scale(.98); }
+
+        .item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .45s var(--ease-out);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .item:hover::before { transform: scaleX(1); }
+
+        .item-enter { animation: itemIn .55s var(--ease-out) calc(var(--i, 0) * 45ms) backwards; }
+        #link-organizer[data-dir="in"]  .item-enter { animation-name: itemInRight; }
+        #link-organizer[data-dir="out"] .item-enter { animation-name: itemInLeft; }
+
+        .item-icon > * { transition: transform .4s var(--ease-spring); }
+        .item:hover .item-icon > * { transform: scale(1.25) rotate(-8deg); }
+        .group-item:hover .item-icon .fa-folder::before { content: "\f07c"; }
+
+        .item-name { transition: transform .3s var(--ease-out), color .2s; }
+        .item:hover .item-name { transform: translateX(3px); }
+
+        .item-actions-container { transition: opacity .25s, transform .3s var(--ease-out); }
+        .item-actions-container button {
+            transition: background-color .2s, color .2s, transform .25s var(--ease-spring);
+        }
+        .item-actions-container button:hover { transform: translateY(-2px) scale(1.2); }
+        .item-actions-container button:active { transform: scale(.85); }
+        .action-pin i { transition: transform .35s var(--ease-spring), color .2s; }
+        .item.pinned .action-pin i { transform: rotate(35deg); }
+
+        .item-path { transition: color .2s, transform .2s var(--ease-out); }
+        .item-path:hover { transform: translateX(2px); }
+
+        .no-items-message { animation: itemIn .6s var(--ease-out) backwards; }
+
+        /* Efecto onda al pulsar */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, var(--accent-primary-transparent) 0%, transparent 70%);
+            transform: scale(0);
+            animation: rippleOut .7s var(--ease-out) forwards;
+        }
+
+        /* Arrastrar y soltar */
+        .sortable-ghost { animation: ghostPulse 1.2s ease-in-out infinite; }
+        .sortable-chosen, .sortable-drag { transition: transform .2s var(--ease-spring), box-shadow .2s; }
+
+        /* Ventanas modales */
+        .modal { animation: fadeIn .25s ease-out; backdrop-filter: blur(3px); }
+        .modal-content { animation: modalPop .45s var(--ease-spring); }
+        .close-button { transition: transform .3s var(--ease-spring), color .2s; }
+        .close-button:hover, .close-button:focus { transform: rotate(90deg) scale(1.2); }
+        .modal-footer button {
+            transition: transform .25s var(--ease-spring), opacity .2s, box-shadow .25s;
+        }
+        .modal-footer button:hover { transform: translateY(-2px); box-shadow: 0 6px 14px var(--shadow-color); opacity: 1; }
+        .modal-footer button:active { transform: scale(.95); }
+        .modal-body input[type="text"], .modal-body input[type="url"], .modal-body textarea,
+        .modal-body select, .modal-body input[type="number"] {
+            transition: border-color .2s, box-shadow .25s, transform .25s var(--ease-out);
+        }
+        .modal-body input[type="text"]:focus, .modal-body input[type="url"]:focus,
+        .modal-body textarea:focus, .modal-body select:focus, .modal-body input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-transparent);
+        }
+
+        /* Menú contextual (clic derecho) */
+        #customContextMenu { animation: menuPop .2s var(--ease-out); transform-origin: top left; }
+        #customContextMenu li { transition: background-color .15s, padding-left .25s var(--ease-out); }
+        #customContextMenu li:not(.separator):not(.disabled):hover { padding-left: 21px; }
+
+        /* Respeta a quien prefiere menos movimiento */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-delay: 0ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
+        /* =====================================================
+           COLORES + NOTAS MEJORADAS
+           ===================================================== */
+
+        /* --- Tarjetas con color --- */
+        .item.has-color {
+            background-image: linear-gradient(145deg, var(--item-color-soft), transparent 65%);
+            border-top-color: var(--item-color-border);
+            border-right-color: var(--item-color-border);
+            border-bottom-color: var(--item-color-border);
+        }
+        .item.has-color:not(.pinned) { border-left-color: var(--item-color-border); }
+        .item.has-color::before { background: var(--item-color); transform: scaleX(1); transition: transform .45s var(--ease-out), height .2s; }
+        .item.has-color:hover::before { height: 5px; }
+        .item.has-color .item-icon > .fas,
+        .item.has-color .item-icon > .far { color: var(--item-color); }
+        .item.has-color:hover {
+            box-shadow: 0 12px 26px var(--shadow-color), 0 0 0 1px var(--item-color-border), 0 8px 30px var(--item-color-soft);
+        }
+
+        /* --- Selector de color (modal) --- */
+        .modal-content { border-top: 3px solid var(--modal-accent, var(--border-color)); transition: max-width .3s var(--ease-out); }
+        .modal-content.note-mode { max-width: 720px; width: 90%; }
+        .color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+        .color-swatches .swatch {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            padding: 0; margin: 0;
+            cursor: pointer;
+            position: relative;
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+            transition: transform .25s var(--ease-spring), box-shadow .2s;
+        }
+        .color-swatches .swatch:hover { transform: scale(1.2); }
+        .color-swatches .swatch.selected {
+            transform: scale(1.15);
+            border-color: var(--bg-secondary);
+            box-shadow: 0 0 0 2px var(--text-primary);
+        }
+        .color-swatches .swatch-none { background: var(--bg-primary); }
+        .color-swatches .swatch-none::after {
+            content: ''; position: absolute; width: 70%; height: 2px;
+            background: var(--danger); transform: rotate(-45deg);
+        }
+        .color-swatches .swatch-custom {
+            background: conic-gradient(#ef4444, #eab308, #22c55e, #3b82f6, #ec4899, #ef4444);
+            color: #fff; font-size: .65em; overflow: hidden;
+        }
+        .modal-body .color-swatches input[type="color"] {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+            margin: 0; padding: 0; border: 0;
+        }
+
+        /* --- Filtro por color (cabecera) --- */
+        .header-search-sort-container { flex-wrap: wrap; justify-content: flex-end; }
+        .color-filter-bar { display: flex; align-items: center; gap: 6px; }
+        .color-filter-bar.hidden { display: none; }
+        .color-dot {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            padding: 0; cursor: pointer;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+            transition: transform .25s var(--ease-spring), box-shadow .2s, border-color .2s;
+        }
+        .color-dot:hover { transform: scale(1.3); }
+        .color-dot.active {
+            transform: scale(1.25);
+            border-color: var(--bg-header);
+            box-shadow: 0 0 0 2px var(--text-primary);
+        }
+
+        /* --- Editor de notas --- */
+        .note-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .note-toolbar button {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: .85em;
+            transition: color .2s, border-color .2s, transform .25s var(--ease-spring);
+        }
+        .note-toolbar button:hover { color: var(--accent-primary); border-color: var(--accent-primary); transform: translateY(-2px); }
+        .note-toolbar button:active { transform: scale(.92); }
+        .note-toolbar button i { margin-right: 4px; }
+        .note-toolbar button:not(:first-child):not(:nth-child(2)) i { margin-right: 0; }
+        .note-mode #modalItemDescription { min-height: 240px; max-height: 50vh; line-height: 1.55; resize: vertical; }
+        .note-stats { font-size: .78em; color: var(--text-secondary); margin: -8px 0 14px; text-align: right; }
+
+        /* --- Vista previa de la nota en la tarjeta --- */
+        .note-preview {
+            margin-top: 10px;
+            font-size: .92em;
+            line-height: 1.45;
+            color: var(--text-secondary);
+            word-break: break-word;
+            max-height: 11.5em;
+            overflow: hidden;
+        }
+        .note-preview.is-long {
+            -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
+            mask-image: linear-gradient(to bottom, #000 72%, transparent);
+        }
+        .note-preview .note-gap { height: .5em; }
+        .note-preview .note-h { font-weight: 700; color: var(--text-primary); }
+        .note-preview .note-li { position: relative; padding-left: 1.1em; }
+        .note-preview .note-li::before { content: '•'; position: absolute; left: .25em; color: var(--item-color, var(--accent-primary)); }
+        .note-preview strong { color: var(--text-primary); }
+        .note-preview code { background: rgba(127,127,127,.2); padding: 0 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: .95em; }
+        .note-preview a { color: var(--accent-primary); text-decoration: underline; }
+        .note-preview a:hover { color: var(--accent-secondary); }
+
+        .note-preview .note-check { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; padding: 1px 0; }
+        .note-preview .note-check input {
+            -webkit-appearance: none; appearance: none;
+            width: 16px; height: 16px; margin: 2px 0 0; flex-shrink: 0;
+            border: 2px solid var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer; position: relative;
+            transition: background-color .2s, border-color .2s, transform .25s var(--ease-spring);
+        }
+        .note-preview .note-check input:hover { border-color: var(--item-color, var(--accent-primary)); transform: scale(1.2); }
+        .note-preview .note-check input:checked {
+            background: var(--item-color, var(--accent-secondary));
+            border-color: var(--item-color, var(--accent-secondary));
+        }
+        .note-preview .note-check input:checked::after {
+            content: ''; position: absolute; left: 3px; top: 0;
+            width: 4px; height: 8px;
+            border: solid #fff; border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .note-preview .note-check input:checked + span { text-decoration: line-through; opacity: .55; }
+
+        .note-meta {
+            margin-top: auto;
+            padding-top: 10px;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            font-size: .75em;
+            color: var(--text-secondary);
+            opacity: .85;
+        }
+        .note-progress { display: flex; align-items: center; gap: 6px; }
+        .note-progress-bar { width: 46px; height: 4px; border-radius: 3px; background: var(--border-color); overflow: hidden; }
+        .note-progress-bar i { display: block; height: 100%; background: var(--item-color, var(--accent-secondary)); transition: width .4s var(--ease-out); }
+
+        /* --- Aviso emergente --- */
+        .toast {
+            position: fixed; left: 50%; bottom: 28px;
+            transform: translate(-50%, 20px);
+            background: var(--bg-secondary); color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px; border-radius: 22px;
+            box-shadow: 0 6px 18px var(--shadow-color);
+            font-size: .9em; z-index: 2000;
+            opacity: 0; pointer-events: none;
+            transition: opacity .25s, transform .4s var(--ease-spring);
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        /* =====================================================
+           SELECTOR DE GRUPO EN ÁRBOL
+           ===================================================== */
+        .group-picker {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-primary);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        html.light-mode .group-picker { background: #fff; }
+
+        .gp-summary {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 12px;
+            font-size: .85em;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color .3s, color .3s;
+        }
+        .gp-summary i { flex-shrink: 0; }
+        .gp-summary .gp-path { color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gp-summary.changed { background: var(--accent-primary-transparent); color: var(--text-primary); }
+        .gp-summary.changed i { color: var(--accent-secondary); animation: gpNudge .5s var(--ease-spring); }
+        @keyframes gpNudge { from { transform: translateX(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+        .gp-search-wrap { position: relative; padding: 8px 10px 0; }
+        .gp-search-wrap i { position: absolute; left: 20px; top: 50%; margin-top: -2px; transform: translateY(-50%); color: var(--text-secondary); font-size: .8em; pointer-events: none; }
+        .modal-body .gp-search-wrap input.gp-search {
+            width: 100%; box-sizing: border-box;
+            margin: 0; padding: 7px 10px 7px 30px;
+            border-radius: 16px; font-size: .88em;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: border-color .2s, box-shadow .25s;
+        }
+        .modal-body .gp-search-wrap input.gp-search:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-transparent);
+        }
+
+        .gp-list { max-height: 250px; overflow-y: auto; padding: 6px; scrollbar-width: thin; position: relative; scroll-behavior: smooth; }
+        .gp-empty { padding: 18px; text-align: center; color: var(--text-secondary); font-size: .88em; font-style: italic; }
+
+        .gp-row {
+            display: flex; align-items: center;
+            min-height: 34px;
+            padding-right: 8px;
+            border-radius: 7px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: .92em;
+            outline: none;
+            transition: background-color .15s, border-color .15s, transform .2s var(--ease-out);
+        }
+        .gp-row:hover:not(.disabled) { background: rgba(127,127,127,.14); transform: translateX(2px); }
+        .gp-row:focus-visible { box-shadow: 0 0 0 2px var(--accent-primary); }
+        .gp-row.selected {
+            background: var(--accent-primary-transparent);
+            border-left-color: var(--accent-primary);
+        }
+        .gp-row.disabled { opacity: .4; cursor: not-allowed; }
+
+        .gp-guide { width: 18px; align-self: stretch; flex-shrink: 0; position: relative; }
+        .gp-guide::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; border-left: 1px dashed var(--border-color); }
+
+        .gp-toggle {
+            width: 22px; height: 22px; flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: none; border: none; padding: 0; margin: 0;
+            color: var(--text-secondary); cursor: pointer; border-radius: 5px;
+            font-size: .7em;
+        }
+        .gp-toggle:hover { background: rgba(127,127,127,.25); color: var(--text-primary); }
+        .gp-toggle i { transition: transform .25s var(--ease-spring); }
+        .gp-row.expanded > .gp-toggle i { transform: rotate(90deg); }
+        .gp-toggle-spacer { width: 22px; flex-shrink: 0; }
+
+        .gp-icon { width: 22px; text-align: center; margin-right: 6px; color: var(--accent-primary); flex-shrink: 0; transition: transform .3s var(--ease-spring); }
+        .gp-row:hover:not(.disabled) .gp-icon { transform: scale(1.18) rotate(-6deg); }
+        .gp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gp-row.root .gp-name, .gp-row.depth-0 .gp-name { font-weight: 600; }
+        .gp-name mark { background: var(--accent-secondary); color: #000; border-radius: 3px; padding: 0 2px; }
+
+        .gp-badge {
+            flex-shrink: 0; margin-left: 8px;
+            min-width: 18px; padding: 0 6px;
+            border-radius: 9px;
+            background: rgba(127,127,127,.2);
+            color: var(--text-secondary);
+            font-size: .75em; line-height: 18px; text-align: center;
+        }
+        .gp-tag {
+            flex-shrink: 0; margin-left: 8px;
+            padding: 0 7px; border-radius: 9px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: .7em; line-height: 17px;
+        }
+        .gp-check { flex-shrink: 0; margin-left: 8px; color: var(--accent-secondary); animation: popIn .35s var(--ease-spring); }
+
+
+        /* =====================================================
+           PANEL LATERAL DE NOTAS (autoguardado)
+           ===================================================== */
+        :root { --note-panel-w: 420px; }
+        body { transition: background-color .3s, color .3s, padding-right .35s var(--ease-out), padding-bottom .35s var(--ease-out); }
+        body.note-panel-open { padding-right: var(--note-panel-w); }
+
+        .note-panel {
+            position: fixed; z-index: 1008;
+            top: 0; right: 0; bottom: 0;
+            width: var(--note-panel-w); max-width: 100vw;
+            display: flex; flex-direction: column;
+            background: var(--bg-secondary); color: var(--text-primary);
+            border-left: 1px solid var(--border-color);
+            border-top: 3px solid var(--panel-accent, var(--border-color));
+            box-shadow: -8px 0 28px var(--shadow-color);
+            transform: translateX(100%); visibility: hidden;
+            transition: transform .35s var(--ease-out), visibility 0s linear .35s;
+        }
+        .note-panel.open { transform: none; visibility: visible; transition: transform .35s var(--ease-out), visibility 0s; }
+        .note-panel-grip { display: none; width: 40px; height: 4px; border-radius: 2px; background: var(--border-color); margin: 8px auto 0; }
+
+        .note-panel-header { display: flex; align-items: center; gap: 6px; padding: 12px 12px 8px 16px; border-bottom: 1px solid var(--border-color); }
+        .note-panel-header input[type="text"] {
+            flex: 1; min-width: 0;
+            background: transparent; border: 0; border-bottom: 2px solid transparent;
+            color: var(--text-primary); font-family: inherit; font-size: 1.1em; font-weight: 600;
+            padding: 4px 0; outline: none; transition: border-color .2s;
+        }
+        .note-panel-header input[type="text"]:focus { border-bottom-color: var(--panel-accent, var(--accent-primary)); }
+        .note-panel-header input[type="text"]::placeholder { font-weight: 400; color: var(--text-secondary); opacity: .8; }
+        .note-panel-actions { display: flex; gap: 2px; flex-shrink: 0; }
+        .note-panel-actions button {
+            width: 32px; height: 32px; padding: 0;
+            background: transparent; border: 0; border-radius: 6px;
+            color: var(--text-secondary); cursor: pointer; font-size: .95em;
+            transition: background-color .2s, color .2s, transform .25s var(--ease-spring);
+        }
+        .note-panel-actions button:hover { background: var(--bg-primary); color: var(--accent-primary); transform: translateY(-1px); }
+        .note-panel-actions button.danger:hover { color: var(--danger); }
+
+        .note-panel-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; }
+        .note-panel-body .note-toolbar { margin: 0; }
+        .note-panel-body textarea {
+            flex: 1; min-height: 140px; width: 100%; box-sizing: border-box; resize: none;
+            background: var(--bg-primary); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 12px; font-family: inherit; font-size: .95em; line-height: 1.55;
+            outline: none; transition: border-color .2s, box-shadow .25s;
+        }
+        .note-panel-body textarea:focus { border-color: var(--panel-accent, var(--accent-primary)); box-shadow: 0 0 0 3px var(--accent-primary-transparent); }
+        .note-panel .color-swatches { margin: 0; gap: 8px; }
+        .note-panel .color-swatches .swatch { width: 22px; height: 22px; }
+        .note-panel .color-swatches input[type="color"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; margin: 0; padding: 0; border: 0; }
+
+        .note-panel-footer {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            padding: 8px 16px; border-top: 1px solid var(--border-color);
+            font-size: .78em; color: var(--text-secondary);
+        }
+        .note-save-status { white-space: nowrap; transition: color .3s; }
+        .note-save-status.saved { color: var(--accent-secondary); }
+
+        .item.note-active { box-shadow: 0 0 0 2px var(--item-color, var(--accent-primary)), 0 6px 18px var(--shadow-color); }
+
+        @media (max-width: 760px) {
+            .note-panel {
+                top: auto; left: 0; right: 0; width: auto;
+                height: 72vh; height: 72dvh;
+                border-left: 0; border-radius: 16px 16px 0 0;
+                box-shadow: 0 -8px 28px var(--shadow-color);
+                transform: translateY(100%);
+            }
+            .note-panel-grip { display: block; }
+            body.note-panel-open { padding-right: 0; padding-bottom: 72vh; padding-bottom: 72dvh; }
+            .note-panel input[type="text"], .note-panel textarea { font-size: 16px; }
+            .note-panel-footer .note-hint { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -750,6 +1270,7 @@
                     <div id="breadcrumbs-container" class="breadcrumbs-container hidden"></div>
                 </div>
                 <div class="header-search-sort-container"> 
+                    <div id="colorFilterBar" class="color-filter-bar hidden" title="Filtrar por color"></div>
                     <input type="search" id="searchInput" placeholder="Buscar...">
                     <select id="sortOptions">
                         <option value="default">Ordenar: Predeterminado</option>
@@ -780,17 +1301,34 @@
                 <input type="hidden" id="modalParentId"> 
                 <label for="modalItemName" id="modalNameLabel">Nombre:</label>
                 <input type="text" id="modalItemName" required>
+                <div id="modalColorContainer">
+                    <label>Color:</label>
+                    <div id="colorSwatches" class="color-swatches"></div>
+                    <input type="hidden" id="modalItemColor">
+                </div>
                 <div id="modalUrlContainer">
                     <label for="modalItemUrl">URL:</label>
                     <input type="url" id="modalItemUrl">
                 </div>
                 <div id="modalDescriptionContainer">
                     <label for="modalItemDescription" id="modalDescriptionLabel">Descripción:</label>
+                    <div id="noteToolbar" class="note-toolbar" style="display:none;">
+                        <button type="button" data-note-action="check" title="Lista de tareas"><i class="fas fa-check-square"></i> Tareas</button>
+                        <button type="button" data-note-action="bullet" title="Lista con viñetas"><i class="fas fa-list-ul"></i> Lista</button>
+                        <button type="button" data-note-action="heading" title="Título"><i class="fas fa-heading"></i></button>
+                        <button type="button" data-note-action="bold" title="Negrita"><i class="fas fa-bold"></i></button>
+                        <button type="button" data-note-action="italic" title="Cursiva"><i class="fas fa-italic"></i></button>
+                        <button type="button" data-note-action="date" title="Insertar fecha y hora"><i class="fas fa-clock"></i></button>
+                    </div>
                     <textarea id="modalItemDescription"></textarea>
+                    <div id="noteStats" class="note-stats" style="display:none;"></div>
                 </div>
                 <div id="modalMoveToGroupContainer" style="display: none;">
-                    <label for="modalItemGroupSelector">Mover a Grupo:</label>
-                    <select id="modalItemGroupSelector">
+                    <label>Ubicación (mover a otro grupo):</label>
+                    <!-- Selector visual en árbol (se construye por JS) -->
+                    <div id="groupPicker" class="group-picker"></div>
+                    <!-- El select real se mantiene oculto: guarda el valor elegido -->
+                    <select id="modalItemGroupSelector" style="display:none;" aria-hidden="true" tabindex="-1">
                         <!-- Options will be populated by JS -->
                     </select>
                 </div>
@@ -821,6 +1359,38 @@
     <div id="customContextMenu">
         <ul></ul>
     </div>
+
+    <!-- Panel lateral de notas (escritorio: desde la derecha · móvil: hoja desde abajo) -->
+    <aside id="notePanel" class="note-panel" aria-hidden="true" aria-label="Editor de nota">
+        <div class="note-panel-grip"></div>
+        <div class="note-panel-header">
+            <input type="text" id="notePanelTitle" placeholder="Título (opcional)" autocomplete="off">
+            <div class="note-panel-actions">
+                <button type="button" id="notePanelCopy" title="Copiar texto"><i class="fas fa-copy"></i></button>
+                <button type="button" id="notePanelMove" title="Mover a otro grupo"><i class="fas fa-folder-open"></i></button>
+                <button type="button" id="notePanelDelete" class="danger" title="Eliminar nota"><i class="fas fa-trash-alt"></i></button>
+                <button type="button" id="notePanelClose" title="Cerrar (Esc)"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="note-panel-body">
+            <div id="notePanelToolbar" class="note-toolbar">
+                <button type="button" data-note-action="check" title="Lista de tareas"><i class="fas fa-check-square"></i> Tareas</button>
+                <button type="button" data-note-action="bullet" title="Lista con viñetas"><i class="fas fa-list-ul"></i> Lista</button>
+                <button type="button" data-note-action="heading" title="Título"><i class="fas fa-heading"></i></button>
+                <button type="button" data-note-action="bold" title="Negrita"><i class="fas fa-bold"></i></button>
+                <button type="button" data-note-action="italic" title="Cursiva"><i class="fas fa-italic"></i></button>
+                <button type="button" data-note-action="date" title="Insertar fecha y hora"><i class="fas fa-clock"></i></button>
+            </div>
+            <textarea id="notePanelText" placeholder="Escribe tu nota… Usa Tareas para crear una lista con casillas."></textarea>
+            <div id="notePanelColors" class="color-swatches" aria-label="Color de la nota"></div>
+        </div>
+        <div class="note-panel-footer">
+            <span><span id="notePanelStats"></span><span class="note-hint"> · Ctrl+Intro para cerrar</span></span>
+            <span id="notePanelStatus" class="note-save-status"></span>
+        </div>
+    </aside>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 
     <script>
@@ -854,6 +1424,12 @@
 
             const searchInputEl = document.getElementById('searchInput');
             const sortOptionsEl = document.getElementById('sortOptions');
+            const colorFilterBarEl = document.getElementById('colorFilterBar');
+            const colorSwatchesEl = document.getElementById('colorSwatches');
+            const modalColorInput = document.getElementById('modalItemColor');
+            const noteToolbarEl = document.getElementById('noteToolbar');
+            const noteStatsEl = document.getElementById('noteStats');
+            const toastEl = document.getElementById('toast');
 
 
             const STORAGE_KEY = 'linkCentralData_v2'; 
@@ -862,6 +1438,10 @@
             let currentViewStack = []; 
             let sortableInstance = null; 
             let currentSearchTerm = ''; 
+            // Estado para animar solo lo que cambia (no todo en cada pulsación)
+            let lastViewKey = null;
+            let lastViewDepth = 0;
+            let renderedIds = new Set();
             let currentSortPreference = localStorage.getItem(SORT_PREF_KEY) || 'default'; 
 
             const customContextMenuEl = document.getElementById('customContextMenu');
@@ -971,7 +1551,7 @@
             }
 
 
-            function addItem(type, name, url, parentId, customId = null, isCollapsed = undefined, itemsArray = null, description = null) {
+            function addItem(type, name, url, parentId, customId = null, isCollapsed = undefined, itemsArray = null, description = null, color = null) {
                 const newItem = { 
                     id: customId || generateId(), 
                     type, 
@@ -980,12 +1560,14 @@
                     createdAt: Date.now(), 
                     isPinned: false
                 };
+                if (color) newItem.color = String(color).toLowerCase();
                 if (type === 'link') {
                     newItem.url = (url && !url.startsWith('http://') && !url.startsWith('https://')) ? `http://${url}` : url;
                     newItem.description = description || '';
                 } else if (type === 'note') {
                     // Notes don't need URL, but they use description
                     newItem.description = description || '';
+                    newItem.updatedAt = Date.now();
                 } else { 
                     newItem.items = itemsArray || []; 
                 }
@@ -1007,7 +1589,7 @@
                 mainMenuDropdown.classList.remove('show'); 
             }
 
-            function editItem(id, newName, newUrl, newDescription, newParentIdForItem = undefined) {
+            function editItem(id, newName, newUrl, newDescription, newParentIdForItem = undefined, newColor = undefined) {
                 const result = findItemRecursive(id);
                 if (!result) {
                     console.error("editItem: Elemento no encontrado", id);
@@ -1019,11 +1601,16 @@
                 const oldIndex = result.index;
 
                 itemToEdit.name = newName; 
+                if (newColor !== undefined) {
+                    if (newColor) itemToEdit.color = String(newColor).toLowerCase();
+                    else delete itemToEdit.color;
+                }
 
                 if (itemToEdit.type === 'link') {
                     itemToEdit.url = (newUrl && !newUrl.startsWith('http://') && !newUrl.startsWith('https://')) ? `http://${newUrl}` : newUrl;
                     itemToEdit.description = newDescription || '';
                 } else if (itemToEdit.type === 'note') {
+                    if ((newDescription || '') !== (itemToEdit.description || '')) itemToEdit.updatedAt = Date.now();
                     itemToEdit.description = newDescription || '';
                 }
 
@@ -1077,6 +1664,7 @@
                 removeItem(itemId, data);
                 saveData();
                 render();
+                closeNotePanelIfGone();
             }
 
             function togglePinItem(itemId) {
@@ -1163,9 +1751,10 @@
                 }
                 sortableInstance = new Sortable(element, {
                     group: 'shared-grid', 
-                    animation: 150,
+                    animation: 250,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
                     handle: '.drag-handle',
-                    disabled: !!currentSearchTerm.trim(),
+                    disabled: isFiltering(),
                     ghostClass: 'sortable-ghost',
                     chosenClass: 'sortable-chosen',
                     dragClass: 'sortable-drag',
@@ -1255,11 +1844,468 @@
                 });
             }
 
+            // =====================================================
+            //  COLORES, NOTAS Y UTILIDADES
+            // =====================================================
+            const COLOR_PALETTE = [
+                { name: 'Rojo',     value: '#ef4444' },
+                { name: 'Naranja',  value: '#f97316' },
+                { name: 'Amarillo', value: '#eab308' },
+                { name: 'Verde',    value: '#22c55e' },
+                { name: 'Turquesa', value: '#14b8a6' },
+                { name: 'Azul',     value: '#3b82f6' },
+                { name: 'Violeta',  value: '#8b5cf6' },
+                { name: 'Rosa',     value: '#ec4899' },
+                { name: 'Gris',     value: '#94a3b8' }
+            ];
+            let activeColorFilter = '';
+            let toastTimer = null;
+            const modalContentEl = itemModal.querySelector('.modal-content');
+
+            function isFiltering() { return !!(currentSearchTerm.trim() || activeColorFilter); }
+
+            function showToast(msg) {
+                toastEl.textContent = msg;
+                toastEl.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+            }
+
+            async function copyText(text, okMsg = 'Copiado') {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast(okMsg);
+                } catch (err) {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); showToast(okMsg); }
+                    catch (e) { showToast('No se pudo copiar'); }
+                    ta.remove();
+                }
+            }
+
+            function timeAgo(ts) {
+                const mins = Math.floor((Date.now() - ts) / 60000);
+                if (mins < 1) return 'ahora';
+                if (mins < 60) return `hace ${mins} min`;
+                const hours = Math.floor(mins / 60);
+                if (hours < 24) return `hace ${hours} h`;
+                const days = Math.floor(hours / 24);
+                if (days === 1) return 'ayer';
+                if (days < 7) return `hace ${days} días`;
+                return new Date(ts).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            }
+
+            // ---- Color en las tarjetas ----
+            function applyItemColor(itemDiv, item) {
+                if (!item.color) return;
+                const rgb = hexToRgb(item.color);
+                itemDiv.classList.add('has-color');
+                itemDiv.style.setProperty('--item-color', item.color);
+                if (rgb) {
+                    itemDiv.style.setProperty('--item-color-soft', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.16)`);
+                    itemDiv.style.setProperty('--item-color-border', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.55)`);
+                }
+            }
+
+            // ---- Selector de color del modal ----
+            function buildColorSwatches() {
+                colorSwatchesEl.innerHTML = '';
+                const addSwatch = (value, title) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'swatch' + (value ? '' : ' swatch-none');
+                    b.dataset.value = value;
+                    b.title = title;
+                    if (value) b.style.background = value;
+                    b.onclick = () => setModalColor(value);
+                    colorSwatchesEl.appendChild(b);
+                };
+                addSwatch('', 'Sin color');
+                COLOR_PALETTE.forEach(c => addSwatch(c.value, c.name));
+                const custom = document.createElement('label');
+                custom.className = 'swatch swatch-custom';
+                custom.title = 'Color personalizado';
+                custom.innerHTML = '<i class="fas fa-plus"></i><input type="color" value="#4a90e2">';
+                custom.querySelector('input').addEventListener('input', e => setModalColor(e.target.value));
+                colorSwatchesEl.appendChild(custom);
+            }
+
+            function setModalColor(value) {
+                value = (value || '').toLowerCase();
+                modalColorInput.value = value;
+                let matched = false;
+                colorSwatchesEl.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw => {
+                    const on = (sw.dataset.value || '') === value;
+                    sw.classList.toggle('selected', on);
+                    if (on) matched = true;
+                });
+                const custom = colorSwatchesEl.querySelector('.swatch-custom');
+                const isCustom = !!value && !matched;
+                custom.classList.toggle('selected', isCustom);
+                custom.style.background = isCustom ? value : '';
+                if (isCustom) custom.querySelector('input').value = value;
+                if (value) modalContentEl.style.setProperty('--modal-accent', value);
+                else modalContentEl.style.removeProperty('--modal-accent');
+            }
+
+            // ---- Filtro por color en la cabecera ----
+            function updateColorFilterBar() {
+                const used = new Set();
+                (function walk(items) {
+                    items.forEach(i => {
+                        if (i.color) used.add(String(i.color).toLowerCase());
+                        if (i.type === 'group' && i.items) walk(i.items);
+                    });
+                })(data);
+                if (activeColorFilter && !used.has(activeColorFilter)) activeColorFilter = '';
+                colorFilterBarEl.innerHTML = '';
+                if (used.size === 0) { colorFilterBarEl.classList.add('hidden'); return; }
+                colorFilterBarEl.classList.remove('hidden');
+                const order = c => { const i = COLOR_PALETTE.findIndex(p => p.value === c); return i === -1 ? 99 : i; };
+                [...used].sort((a, b) => order(a) - order(b)).forEach(color => {
+                    const dot = document.createElement('button');
+                    dot.type = 'button';
+                    dot.className = 'color-dot' + (color === activeColorFilter ? ' active' : '');
+                    dot.style.background = color;
+                    const pal = COLOR_PALETTE.find(p => p.value === color);
+                    dot.title = (pal ? pal.name : 'Color personalizado') + (color === activeColorFilter ? ' (quitar filtro)' : ' (filtrar)');
+                    dot.onclick = () => {
+                        activeColorFilter = (activeColorFilter === color) ? '' : color;
+                        render();
+                    };
+                    colorFilterBarEl.appendChild(dot);
+                });
+            }
+
+            // ---- Notas: texto enriquecido sencillo ----
+            function escapeHTML(str) {
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+            function inlineMd(str) {
+                let t = escapeHTML(str);
+                t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+                t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                t = t.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
+                t = t.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+                return t;
+            }
+            function renderNoteHTML(text) {
+                let out = '';
+                text.split('\n').forEach((line, i) => {
+                    let m;
+                    if ((m = line.match(/^\s*- \[([ xX])\] ?(.*)$/))) {
+                        const checked = m[1].toLowerCase() === 'x';
+                        out += `<label class="note-line note-check"><input type="checkbox" data-line="${i}"${checked ? ' checked' : ''}><span>${inlineMd(m[2])}</span></label>`;
+                    } else if ((m = line.match(/^\s*[-*] (.*)$/))) {
+                        out += `<div class="note-line note-li">${inlineMd(m[1])}</div>`;
+                    } else if ((m = line.match(/^\s*(\d+)\. (.*)$/))) {
+                        out += `<div class="note-line"><strong>${m[1]}.</strong> ${inlineMd(m[2])}</div>`;
+                    } else if ((m = line.match(/^#{1,3} (.*)$/))) {
+                        out += `<div class="note-line note-h">${inlineMd(m[1])}</div>`;
+                    } else if (line.trim() === '') {
+                        out += '<div class="note-gap"></div>';
+                    } else {
+                        out += `<div class="note-line">${inlineMd(line)}</div>`;
+                    }
+                });
+                return out;
+            }
+            function checklistProgress(text) {
+                const total = (text.match(/^\s*- \[[ xX]\]/gm) || []).length;
+                const done = (text.match(/^\s*- \[[xX]\]/gm) || []).length;
+                return { total, done };
+            }
+            function toggleChecklistLine(itemId, lineIndex) {
+                if (noteState && noteState.id === itemId) flushNoteSave();
+                const r = findItemRecursive(itemId);
+                if (!r || !r.item.description) return;
+                const lines = r.item.description.split('\n');
+                if (typeof lines[lineIndex] === 'undefined') return;
+                lines[lineIndex] = lines[lineIndex].replace(/^(\s*- \[)([ xX])(\])/, (m, a, b, c) => a + (b === ' ' ? 'x' : ' ') + c);
+                r.item.description = lines.join('\n');
+                r.item.updatedAt = Date.now();
+                saveData();
+                render();
+                refreshNotePanel(itemId);
+            }
+
+            // ---- Notas: editor del modal ----
+            function updateNoteStats() {
+                const t = modalItemDescription.value;
+                const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+                noteStatsEl.textContent = `${words} palabras · ${t.length} caracteres · Ctrl+Intro para guardar`;
+            }
+            function autoGrowNote() {
+                if (!modalContentEl.classList.contains('note-mode')) return;
+                modalItemDescription.style.height = 'auto';
+                modalItemDescription.style.height = Math.min(modalItemDescription.scrollHeight + 2, window.innerHeight * 0.5) + 'px';
+            }
+            function applyNoteAction(action, ta = modalItemDescription) {
+                ta.focus();
+                const val = ta.value;
+                const start = ta.selectionStart, end = ta.selectionEnd;
+                if (action === 'check' || action === 'bullet' || action === 'heading') {
+                    const prefix = { check: '- [ ] ', bullet: '- ', heading: '# ' }[action];
+                    const lineStart = start === 0 ? 0 : val.lastIndexOf('\n', start - 1) + 1;
+                    let lineEnd = val.indexOf('\n', end);
+                    if (lineEnd === -1) lineEnd = val.length;
+                    const lines = val.slice(lineStart, lineEnd).split('\n');
+                    const allHave = lines.every(l => l.startsWith(prefix));
+                    const newLines = lines.map(l => allHave ? l.slice(prefix.length) : prefix + l.replace(/^(- \[[ xX]\] |[-*] |#{1,3} )/, ''));
+                    ta.setRangeText(newLines.join('\n'), lineStart, lineEnd, 'end');
+                } else if (action === 'bold' || action === 'italic') {
+                    const mark = action === 'bold' ? '**' : '*';
+                    const sel = val.slice(start, end);
+                    ta.setRangeText(mark + sel + mark, start, end, 'end');
+                    if (!sel) ta.setSelectionRange(start + mark.length, start + mark.length);
+                } else if (action === 'date') {
+                    const stamp = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    ta.setRangeText(stamp, start, end, 'end');
+                }
+                ta.dispatchEvent(new Event('input'));
+            }
+            noteToolbarEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+            noteToolbarEl.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-note-action]');
+                if (btn) applyNoteAction(btn.dataset.noteAction);
+            });
+            modalItemDescription.addEventListener('input', () => {
+                if (modalItemType.value === 'note') { updateNoteStats(); autoGrowNote(); }
+            });
+            function noteEditorKeydown(e, onSubmit) {
+                if (e.key !== 'Enter' || e.isComposing) return;
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); onSubmit(); return; }
+                if (e.shiftKey) return;
+                const ta = e.target;
+                if (ta.selectionStart !== ta.selectionEnd) return;
+                const pos = ta.selectionStart, val = ta.value;
+                const lineStart = pos === 0 ? 0 : val.lastIndexOf('\n', pos - 1) + 1;
+                const m = val.slice(lineStart, pos).match(/^(\s*)(- \[[ xX]\] |[-*] |(\d+)\. )(.*)$/);
+                if (!m) return;
+                e.preventDefault();
+                if (m[4].trim() === '') {
+                    ta.setRangeText('', lineStart, pos, 'end');          // línea vacía: salir de la lista
+                } else {
+                    let marker = m[2];
+                    if (/^- \[/.test(marker)) marker = '- [ ] ';
+                    else if (m[3]) marker = (parseInt(m[3], 10) + 1) + '. ';
+                    ta.setRangeText('\n' + m[1] + marker, pos, pos, 'end');
+                }
+                ta.dispatchEvent(new Event('input'));
+            }
+
+            modalItemDescription.addEventListener('keydown', (e) => {
+                if (modalItemType.value === 'note') noteEditorKeydown(e, () => saveModalItemBtn.click());
+            });
+
+            // =====================================================
+            //  PANEL LATERAL DE NOTAS (autoguardado)
+            // =====================================================
+            const notePanelEl = document.getElementById('notePanel');
+            const notePanelTitle = document.getElementById('notePanelTitle');
+            const notePanelText = document.getElementById('notePanelText');
+            const notePanelToolbar = document.getElementById('notePanelToolbar');
+            const notePanelColors = document.getElementById('notePanelColors');
+            const notePanelStats = document.getElementById('notePanelStats');
+            const notePanelStatus = document.getElementById('notePanelStatus');
+            const NOTE_SAVE_DELAY = 500;
+            let noteState = null;          // { id, parentId, color } mientras el panel está abierto
+            let noteSaveTimer = null;
+            let noteStatusTimer = null;
+
+            function deriveNoteName(description) {
+                const firstLine = (description || '').split('\n')
+                    .map(l => l.replace(/^\s*(- \[[ xX]\] ?|[-*] |#{1,3} |\d+\. )/, '').trim())
+                    .find(Boolean);
+                if (!firstLine) return '';
+                return firstLine.length > 40 ? firstLine.slice(0, 40).trimEnd() + '…' : firstLine;
+            }
+
+            function setNoteStatus(msg, saved = false) {
+                notePanelStatus.textContent = msg;
+                notePanelStatus.classList.toggle('saved', saved);
+                clearTimeout(noteStatusTimer);
+                if (saved) noteStatusTimer = setTimeout(() => notePanelStatus.classList.remove('saved'), 1500);
+            }
+
+            function updateNotePanelStats() {
+                const t = notePanelText.value;
+                const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+                notePanelStats.textContent = `${words} palabras · ${t.length} caracteres`;
+            }
+
+            function buildNoteSwatches() {
+                notePanelColors.innerHTML = '';
+                const addSwatch = (value, title) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'swatch' + (value ? '' : ' swatch-none');
+                    b.dataset.value = value;
+                    b.title = title;
+                    if (value) b.style.background = value;
+                    b.onclick = () => setNoteColor(value);
+                    notePanelColors.appendChild(b);
+                };
+                addSwatch('', 'Sin color');
+                COLOR_PALETTE.forEach(c => addSwatch(c.value, c.name));
+                const custom = document.createElement('label');
+                custom.className = 'swatch swatch-custom';
+                custom.title = 'Color personalizado';
+                custom.innerHTML = '<i class="fas fa-plus"></i><input type="color" value="#4a90e2">';
+                custom.querySelector('input').addEventListener('input', e => setNoteColor(e.target.value));
+                notePanelColors.appendChild(custom);
+            }
+
+            function setNoteColor(value, save = true) {
+                value = (value || '').toLowerCase();
+                if (noteState) noteState.color = value;
+                let matched = false;
+                notePanelColors.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw => {
+                    const on = (sw.dataset.value || '') === value;
+                    sw.classList.toggle('selected', on);
+                    if (on) matched = true;
+                });
+                const custom = notePanelColors.querySelector('.swatch-custom');
+                const isCustom = !!value && !matched;
+                custom.classList.toggle('selected', isCustom);
+                custom.style.background = isCustom ? value : '';
+                if (isCustom) custom.querySelector('input').value = value;
+                if (value) notePanelEl.style.setProperty('--panel-accent', value);
+                else notePanelEl.style.removeProperty('--panel-accent');
+                if (save) scheduleNoteSave();
+            }
+
+            function highlightActiveNote() {
+                document.querySelectorAll('.item.note-active').forEach(el => el.classList.remove('note-active'));
+                if (noteState && noteState.id) {
+                    document.querySelectorAll('.item').forEach(el => {
+                        if (el.dataset.id === noteState.id) el.classList.add('note-active');
+                    });
+                }
+            }
+
+            function saveNoteNow() {
+                clearTimeout(noteSaveTimer);
+                noteSaveTimer = null;
+                if (!noteState) return;
+                const description = notePanelText.value.trim();
+                const name = notePanelTitle.value.trim() || deriveNoteName(description);
+                if (!name) { setNoteStatus(''); return; }          // nota vacía: nada que guardar
+                if (noteState.id) {
+                    if (!findItemRecursive(noteState.id)) return;   // la nota ya no existe
+                    editItem(noteState.id, name, undefined, description, undefined, noteState.color || '');
+                } else {
+                    const newId = generateId();
+                    noteState.id = newId;
+                    addItem('note', name, undefined, noteState.parentId, newId, undefined, null, description, noteState.color || '');
+                }
+                highlightActiveNote();
+                setNoteStatus('Guardado ✓', true);
+            }
+            function scheduleNoteSave() {
+                if (!noteState) return;
+                setNoteStatus('Guardando…');
+                clearTimeout(noteSaveTimer);
+                noteSaveTimer = setTimeout(saveNoteNow, NOTE_SAVE_DELAY);
+            }
+            function flushNoteSave() { if (noteSaveTimer) saveNoteNow(); }
+
+            function openNotePanel(id = null, explicitParentId = null) {
+                mainMenuDropdown.classList.remove('show');
+                flushNoteSave();
+                let item = null;
+                if (id) {
+                    const r = findItemRecursive(id);
+                    if (!r) return;
+                    item = r.item;
+                }
+                const parentId = explicitParentId !== null ? explicitParentId : getCurrentParentId();
+                noteState = { id: id || null, parentId: parentId || null, color: '' };
+                const desc = item ? (item.description || '') : '';
+                notePanelText.value = desc;
+                // Si el título es el automático (primera línea), se deja vacío para que siga al contenido
+                notePanelTitle.value = (item && item.name !== deriveNoteName(desc)) ? item.name : '';
+                setNoteColor(item && item.color ? item.color : '', false);
+                setNoteStatus('');
+                updateNotePanelStats();
+                notePanelEl.classList.add('open');
+                notePanelEl.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('note-panel-open');
+                highlightActiveNote();
+                if (!item || window.matchMedia('(hover: hover)').matches) {
+                    notePanelText.focus();
+                    const end = notePanelText.value.length;
+                    notePanelText.setSelectionRange(end, end);
+                }
+            }
+
+            function closeNotePanel() {
+                flushNoteSave();
+                noteState = null;
+                notePanelEl.classList.remove('open');
+                notePanelEl.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('note-panel-open');
+                if (notePanelEl.contains(document.activeElement)) document.activeElement.blur();
+                highlightActiveNote();
+            }
+
+            // Si la nota abierta desaparece (borrada desde la tarjeta o el menú), se cierra el panel
+            function closeNotePanelIfGone() {
+                if (noteState && noteState.id && !findItemRecursive(noteState.id)) {
+                    clearTimeout(noteSaveTimer);
+                    noteSaveTimer = null;
+                    closeNotePanel();
+                }
+            }
+            // Si se marca una casilla desde la tarjeta, el texto del panel se actualiza
+            function refreshNotePanel(itemId) {
+                if (!noteState || noteState.id !== itemId) return;
+                const r = findItemRecursive(itemId);
+                if (!r) return;
+                notePanelText.value = r.item.description || '';
+                updateNotePanelStats();
+            }
+
+            notePanelTitle.addEventListener('input', scheduleNoteSave);
+            notePanelTitle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); notePanelText.focus(); }
+            });
+            notePanelText.addEventListener('input', () => { updateNotePanelStats(); scheduleNoteSave(); });
+            notePanelText.addEventListener('keydown', (e) => noteEditorKeydown(e, closeNotePanel));
+            notePanelToolbar.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+            notePanelToolbar.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-note-action]');
+                if (btn) applyNoteAction(btn.dataset.noteAction, notePanelText);
+            });
+            document.getElementById('notePanelClose').onclick = closeNotePanel;
+            document.getElementById('notePanelCopy').onclick = () => copyText(notePanelText.value, 'Nota copiada');
+            document.getElementById('notePanelDelete').onclick = () => {
+                if (!noteState) return;
+                if (!noteState.id) { closeNotePanel(); return; }
+                if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) deleteItem(noteState.id);
+            };
+            document.getElementById('notePanelMove').onclick = () => {
+                if (!noteState) return;
+                flushNoteSave();
+                if (!noteState.id) { showToast('Escribe algo antes de moverla'); return; }
+                const id = noteState.id;
+                closeNotePanel();
+                openModal('note', id, null, true);   // el selector de grupos sigue viviendo en la ventana
+            };
+            buildNoteSwatches();
+            window.addEventListener('beforeunload', flushNoteSave);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) flushNoteSave(); });
+
             function createDOMElement(item, pathInfo = null) {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = `item ${item.type}-item ${item.isPinned ? 'pinned' : ''}`; 
                 itemDiv.dataset.id = item.id;
                 itemDiv.dataset.type = item.type;
+                if (noteState && noteState.id === item.id) itemDiv.classList.add('note-active');
+                applyItemColor(itemDiv, item);
 
                 const dragHandle = document.createElement('span');
                 dragHandle.className = 'drag-handle';
@@ -1282,6 +2328,14 @@
                 editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
                 editBtn.onclick = (e) => { e.stopPropagation(); openModal(item.type, item.id); };
                 actionsContainer.appendChild(editBtn);
+
+                if (item.type === 'note') {
+                    const copyNoteBtn = document.createElement('button');
+                    copyNoteBtn.title = 'Copiar texto de la nota';
+                    copyNoteBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    copyNoteBtn.onclick = (e) => { e.stopPropagation(); copyText(item.description || item.name, 'Nota copiada'); };
+                    actionsContainer.appendChild(copyNoteBtn);
+                }
 
                 if (item.type === 'group') {
                     const openAllBtn = document.createElement('button');
@@ -1415,10 +2469,37 @@
                     descriptionDiv.textContent = item.description;
                     contentWrapper.appendChild(descriptionDiv);
                 } else if (item.type === 'note' && item.description && item.description.trim() !== '') {
-                    const descriptionDiv = document.createElement('div');
-                    descriptionDiv.className = 'note-item-description';
-                    descriptionDiv.textContent = item.description;
-                    contentWrapper.appendChild(descriptionDiv);
+                    const preview = document.createElement('div');
+                    const isLong = item.description.split('\n').length > 8 || item.description.length > 360;
+                    preview.className = 'note-preview' + (isLong ? ' is-long' : '');
+                    preview.innerHTML = renderNoteHTML(item.description);
+                    preview.addEventListener('click', (e) => {
+                        if (e.target.closest('.note-check')) {
+                            e.stopPropagation();
+                            if (e.target.tagName === 'INPUT') {
+                                toggleChecklistLine(item.id, parseInt(e.target.dataset.line, 10));
+                            }
+                        } else if (e.target.closest('a')) {
+                            e.stopPropagation();
+                        }
+                    });
+                    contentWrapper.appendChild(preview);
+                }
+
+                if (item.type === 'note') {
+                    const meta = document.createElement('div');
+                    meta.className = 'note-meta';
+                    const prog = checklistProgress(item.description || '');
+                    const left = document.createElement('span');
+                    left.className = 'note-progress';
+                    if (prog.total > 0) {
+                        left.innerHTML = `<span class="note-progress-bar"><i style="width:${Math.round(prog.done / prog.total * 100)}%"></i></span><span>${prog.done}/${prog.total}</span>`;
+                    }
+                    const right = document.createElement('span');
+                    right.textContent = timeAgo(item.updatedAt || item.createdAt || Date.now());
+                    meta.appendChild(left);
+                    meta.appendChild(right);
+                    contentWrapper.appendChild(meta);
                 }
                 
                 itemDiv.appendChild(contentWrapper);
@@ -1433,7 +2514,9 @@
             // Busca por nombre en el nivel actual y en TODAS las subcarpetas (recursivo)
             function collectSearchMatches(items, term, pathNames, pathIds, results, pathMap) {
                 for (const item of items) {
-                    if (normalizeText(item.name).includes(term)) {
+                    const termOk = !term || normalizeText(item.name).includes(term) || (item.type === 'note' && normalizeText(item.description).includes(term));
+                    const colorOk = !activeColorFilter || String(item.color || '').toLowerCase() === activeColorFilter;
+                    if (termOk && colorOk) {
                         results.push(item);
                         pathMap.set(item.id, { names: [...pathNames], ids: [...pathIds] });
                     }
@@ -1445,8 +2528,17 @@
 
             function render() {
                 linkOrganizerEl.innerHTML = ''; 
+                updateColorFilterBar();
                 const currentParentId = getCurrentParentId();
                 let itemsToDisplay;
+
+                // ¿Hemos cambiado de carpeta? (para decidir qué animar y en qué dirección)
+                const viewKey = currentViewStack.join('>');
+                const viewChanged = viewKey !== lastViewKey;
+                const viewDepth = currentViewStack.length;
+                if (viewChanged && lastViewKey !== null && viewDepth > lastViewDepth) linkOrganizerEl.dataset.dir = 'in';
+                else if (viewChanged && lastViewKey !== null && viewDepth < lastViewDepth) linkOrganizerEl.dataset.dir = 'out';
+                else linkOrganizerEl.dataset.dir = 'none';
 
                 breadcrumbsContainer.innerHTML = ''; 
                 if (currentViewStack.length > 0) {
@@ -1507,6 +2599,13 @@
                     breadcrumbsContainer.classList.add('hidden');
                 }
 
+                if (viewChanged) {
+                    Array.from(breadcrumbsContainer.children).forEach((c, i) => c.style.setProperty('--c', Math.min(i, 10)));
+                    breadcrumbsContainer.classList.add('crumbs-enter');
+                } else {
+                    breadcrumbsContainer.classList.remove('crumbs-enter');
+                }
+
                 if (currentParentId) {
                     const parentResult = findItemRecursive(currentParentId);
                     if (parentResult && parentResult.item.type === 'group') {
@@ -1526,7 +2625,7 @@
 
                 let filteredItems = itemsToDisplay;
                 const searchPaths = new Map();
-                if (currentSearchTerm.trim()) {
+                if (isFiltering()) {
                     filteredItems = [];
                     collectSearchMatches(itemsToDisplay, normalizeText(currentSearchTerm.trim()), [], [], filteredItems, searchPaths);
                 }
@@ -1562,7 +2661,7 @@
                 if (itemsToRender.length === 0) {
                     const message = document.createElement('p');
                     message.className = 'no-items-message';
-                    if (currentSearchTerm.trim()) {
+                    if (isFiltering()) {
                         message.textContent = 'No hay elementos que coincidan con tu búsqueda.';
                     } else if (itemsToDisplay.length > 0 && filteredItems.length === 0) { 
                         message.textContent = 'No hay elementos que coincidan con tu búsqueda.';
@@ -1572,11 +2671,22 @@
                     }
                     linkOrganizerEl.appendChild(message);
                 } else {
+                    let enterIndex = 0;
                     itemsToRender.forEach(item => {
                         const element = createDOMElement(item, searchPaths.get(item.id) || null);
-                        if (element) linkOrganizerEl.appendChild(element);
+                        if (element) {
+                            // Anima al cambiar de carpeta y cuando aparece un elemento nuevo
+                            if (viewChanged || !renderedIds.has(item.id)) {
+                                element.classList.add('item-enter');
+                                element.style.setProperty('--i', Math.min(enterIndex++, 14));
+                            }
+                            linkOrganizerEl.appendChild(element);
+                        }
                     });
                 }
+                renderedIds = new Set(itemsToRender.map(i => i.id));
+                lastViewKey = viewKey;
+                lastViewDepth = viewDepth;
 
 
                 initializeSortable(linkOrganizerEl); 
@@ -1592,6 +2702,189 @@
                 }
             };
             
+            // =====================================================
+            //  SELECTOR DE GRUPO EN ÁRBOL
+            // =====================================================
+            const groupPickerEl = document.getElementById('groupPicker');
+            const gp = { selected: '', current: '', excluded: [], expanded: new Set(), query: '', select: null, summaryEl: null, listEl: null, searchEl: null };
+
+            function gpPathNames(id) {
+                if (!id) return ['Inicio'];
+                const det = findParentDetails(id, data);
+                const ids = det ? [...det.path, id] : [id];
+                return ['Inicio', ...ids.map(i => { const r = findItemRecursive(i); return r ? r.item.name : '?'; })];
+            }
+
+            function gpSelect(id) {
+                gp.selected = id || '';
+                if (gp.select) gp.select.value = gp.selected;
+                gpRender();
+            }
+
+            function gpHighlight(name, q) {
+                if (!q) return escapeHTML(name);
+                const n = normalizeText(name), i = n.indexOf(q);
+                if (i === -1 || n.length !== name.length) return escapeHTML(name);
+                return escapeHTML(name.slice(0, i)) + '<mark>' + escapeHTML(name.slice(i, i + q.length)) + '</mark>' + escapeHTML(name.slice(i + q.length));
+            }
+
+            function gpRowHTML(opts) {
+                const { id, name, depth, isRoot, hasKids, expanded, color, count, disabled } = opts;
+                const row = document.createElement('div');
+                row.className = 'gp-row depth-' + depth + (isRoot ? ' root' : '') + (hasKids && expanded ? ' expanded' : '')
+                    + (gp.selected === id ? ' selected' : '') + (disabled ? ' disabled' : '');
+                row.dataset.id = id;
+                row.setAttribute('role', 'treeitem');
+                row.setAttribute('aria-selected', gp.selected === id ? 'true' : 'false');
+                if (disabled) row.setAttribute('aria-disabled', 'true');
+                row.tabIndex = disabled ? -1 : 0;
+                if (disabled) row.title = 'No puedes mover un grupo dentro de sí mismo';
+
+                for (let d = 0; d < depth; d++) { const g = document.createElement('span'); g.className = 'gp-guide'; row.appendChild(g); }
+
+                if (hasKids) {
+                    const tg = document.createElement('button');
+                    tg.type = 'button'; tg.tabIndex = -1; tg.className = 'gp-toggle';
+                    tg.title = expanded ? 'Plegar' : 'Desplegar';
+                    tg.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    tg.onclick = (e) => { e.stopPropagation(); if (gp.expanded.has(id)) gp.expanded.delete(id); else gp.expanded.add(id); gpRender(); };
+                    row.appendChild(tg);
+                } else {
+                    const sp = document.createElement('span'); sp.className = 'gp-toggle-spacer'; row.appendChild(sp);
+                }
+
+                const ic = document.createElement('i');
+                ic.className = 'gp-icon fas ' + (isRoot ? 'fa-home' : (gp.selected === id || (hasKids && expanded) ? 'fa-folder-open' : 'fa-folder'));
+                if (color) ic.style.color = color;
+                row.appendChild(ic);
+
+                const nm = document.createElement('span');
+                nm.className = 'gp-name';
+                nm.innerHTML = isRoot ? 'Inicio (raíz)' : gpHighlight(name, gp.query);
+                row.appendChild(nm);
+
+                if (!isRoot && typeof count === 'number' && count > 0) {
+                    const b = document.createElement('span'); b.className = 'gp-badge'; b.textContent = count; b.title = count + ' elemento' + (count === 1 ? '' : 's') + ' dentro';
+                    row.appendChild(b);
+                }
+                if (gp.current === id && !disabled) {
+                    const t = document.createElement('span'); t.className = 'gp-tag'; t.textContent = 'actual'; row.appendChild(t);
+                }
+                if (gp.selected === id) {
+                    const ck = document.createElement('i'); ck.className = 'fas fa-check gp-check'; row.appendChild(ck);
+                }
+
+                if (!disabled) {
+                    row.onclick = () => gpSelect(id);
+                    if (hasKids) row.ondblclick = () => { if (gp.expanded.has(id)) gp.expanded.delete(id); else gp.expanded.add(id); gpRender(); };
+                }
+                return row;
+            }
+
+            function gpRender() {
+                if (!gp.listEl) return;
+                const q = normalizeText(gp.query.trim());
+
+                // Resumen del destino
+                const changed = gp.selected !== gp.current;
+                gp.summaryEl.className = 'gp-summary' + (changed ? ' changed' : '');
+                gp.summaryEl.innerHTML = (changed ? '<i class="fas fa-arrow-right"></i><span>Se moverá a:</span>' : '<i class="fas fa-map-marker-alt"></i><span>Ubicación actual:</span>')
+                    + '<span class="gp-path">' + gpPathNames(gp.selected).map(escapeHTML).join(' / ') + '</span>';
+
+                // ¿qué ramas se muestran con el filtro?
+                const subtreeMatches = (item) => item.type === 'group' && !gp.excluded.includes(item.id) &&
+                    (normalizeText(item.name).includes(q) || (item.items || []).some(subtreeMatches));
+
+                const frag = document.createDocumentFragment();
+                let shown = 0;
+                if (!q) frag.appendChild(gpRowHTML({ id: '', name: 'Inicio', depth: 0, isRoot: true, hasKids: false }));
+
+                (function walk(items, depth) {
+                    items.forEach(item => {
+                        if (item.type !== 'group') return;
+                        const disabled = gp.excluded.includes(item.id);
+                        if (q && !disabled && !subtreeMatches(item)) return;
+                        if (q && disabled) return;
+                        const kids = disabled ? [] : (item.items || []).filter(i => i.type === 'group');
+                        const expanded = q ? true : gp.expanded.has(item.id);
+                        frag.appendChild(gpRowHTML({
+                            id: item.id, name: item.name, depth, hasKids: kids.length > 0, expanded,
+                            color: item.color, count: (item.items || []).length, disabled
+                        }));
+                        shown++;
+                        if (kids.length > 0 && expanded) walk(kids, depth + 1);
+                    });
+                })(data, 0);
+
+                gp.listEl.innerHTML = '';
+                if (q && shown === 0) {
+                    const e = document.createElement('div'); e.className = 'gp-empty'; e.textContent = 'Ningún grupo coincide con la búsqueda.';
+                    gp.listEl.appendChild(e);
+                } else if (!q && shown === 0) {
+                    gp.listEl.appendChild(frag);
+                    const e = document.createElement('div'); e.className = 'gp-empty'; e.textContent = 'Todavía no hay grupos. Crea uno desde el botón de carpeta.';
+                    gp.listEl.appendChild(e);
+                } else {
+                    gp.listEl.appendChild(frag);
+                }
+            }
+
+            function initGroupPicker(selectElement, currentParentId, excludedIds = []) {
+                gp.select = selectElement;
+                gp.current = currentParentId || '';
+                gp.selected = gp.current;
+                gp.excluded = excludedIds;
+                gp.query = '';
+                gp.expanded = new Set();
+                if (gp.current) {
+                    const det = findParentDetails(gp.current, data);
+                    if (det) det.path.forEach(id => gp.expanded.add(id));
+                }
+
+                groupPickerEl.innerHTML = '';
+                gp.summaryEl = document.createElement('div');
+                groupPickerEl.appendChild(gp.summaryEl);
+
+                let groupCount = 0;
+                (function count(items) { items.forEach(i => { if (i.type === 'group') { groupCount++; if (i.items) count(i.items); } }); })(data);
+                gp.searchEl = null;
+                if (groupCount > 6) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'gp-search-wrap';
+                    wrap.innerHTML = '<i class="fas fa-search"></i><input type="search" class="gp-search" placeholder="Buscar grupo..." autocomplete="off">';
+                    gp.searchEl = wrap.querySelector('input');
+                    gp.searchEl.addEventListener('input', () => { gp.query = gp.searchEl.value; gpRender(); });
+                    groupPickerEl.appendChild(wrap);
+                }
+
+                gp.listEl = document.createElement('div');
+                gp.listEl.className = 'gp-list';
+                gp.listEl.setAttribute('role', 'tree');
+                gp.listEl.addEventListener('keydown', (e) => {
+                    const row = e.target.closest('.gp-row');
+                    if (!row) return;
+                    const rows = Array.from(gp.listEl.querySelectorAll('.gp-row:not(.disabled)'));
+                    const i = rows.indexOf(row);
+                    if (e.key === 'ArrowDown') { e.preventDefault(); if (rows[i + 1]) rows[i + 1].focus(); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); if (rows[i - 1]) rows[i - 1].focus(); }
+                    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gpSelect(row.dataset.id); const again = gp.listEl.querySelector('.gp-row[data-id="' + row.dataset.id + '"]'); if (again) again.focus(); }
+                    else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && row.dataset.id) {
+                        const open = e.key === 'ArrowRight';
+                        if (open) gp.expanded.add(row.dataset.id); else gp.expanded.delete(row.dataset.id);
+                        gpRender();
+                        const again = gp.listEl.querySelector('.gp-row[data-id="' + row.dataset.id + '"]'); if (again) again.focus();
+                    }
+                });
+                groupPickerEl.appendChild(gp.listEl);
+
+                gpRender();
+                // llevar la ubicación actual a la vista
+                requestAnimationFrame(() => {
+                    const sel = gp.listEl && gp.listEl.querySelector('.gp-row.selected');
+                    if (sel) gp.listEl.scrollTop = Math.max(0, sel.offsetTop - 60);
+                });
+            }
+
             function populateGroupSelector(selectElement, currentParentIdOfItem, excludedIds = []) {
                 selectElement.innerHTML = ''; 
                 const rootOption = document.createElement('option');
@@ -1620,9 +2913,11 @@
                     });
                 }
                 addGroupOptionsRecursive(data, 0); 
+                initGroupPicker(selectElement, currentParentIdOfItem, excludedIds);
             }
 
-            function openModal(type, id = null, explicitParentId = null) {
+            function openModal(type, id = null, explicitParentId = null, forceModal = false) {
+                if (type === 'note' && !forceModal) { openNotePanel(id, explicitParentId); return; }
                 mainMenuDropdown.classList.remove('show'); 
                 modalItemType.value = type;
                 modalItemId.value = id || '';
@@ -1702,21 +2997,39 @@
                     modalTitle.textContent = titleText;
                     modalItemName.value = '';
                 }
+                // Color, modo nota y editor
+                const existingForColor = id ? findItemRecursive(id) : null;
+                setModalColor(existingForColor && existingForColor.item.color ? existingForColor.item.color : '');
+                const isNote = type === 'note';
+                modalContentEl.classList.toggle('note-mode', isNote);
+                noteToolbarEl.style.display = isNote ? '' : 'none';
+                noteStatsEl.style.display = isNote ? '' : 'none';
+                modalItemDescription.placeholder = isNote ? 'Escribe tu nota...  Usa "Tareas" para crear una lista con casillas.' : '';
+                if (isNote) modalNameLabel.textContent = 'Título (opcional):';
                 itemModal.style.display = 'block';
-                modalItemName.focus();
+                if (isNote) { updateNoteStats(); autoGrowNote(); }
+                else modalItemTextareaReset();
+                if (isNote && !id) modalItemDescription.focus(); else modalItemName.focus();
             }
 
+            function modalItemTextareaReset() { modalItemDescription.style.height = ''; }
             function closeModal() { itemModal.style.display = 'none'; }
 
             saveModalItemBtn.onclick = () => {
                 const type = modalItemType.value;
-                const name = modalItemName.value.trim();
+                let name = modalItemName.value.trim();
                 const url = modalItemUrl.value.trim();
                 const description = modalItemDescription.value.trim();
+                const color = modalColorInput.value;
+                // Nota sin título: usar la primera línea del contenido
+                if (!name && type === 'note') {
+                    const firstLine = description.split('\n').map(l => l.replace(/^\s*(- \[[ xX]\] ?|[-*] |#{1,3} |\d+\. )/, '').trim()).find(Boolean);
+                    if (firstLine) name = firstLine.length > 40 ? firstLine.slice(0, 40).trimEnd() + '…' : firstLine;
+                }
                 const id = modalItemId.value;
                 const parentForNewItem = modalParentIdInput.value; 
 
-                if (!name) { alert('El nombre es obligatorio.'); return; }
+                if (!name) { alert(type === 'note' ? 'Escribe un título o algo de contenido.' : 'El nombre es obligatorio.'); return; }
                 if (type === 'link' && !url) { 
                      alert('La URL es obligatoria para un enlace.'); return;
                 }
@@ -1726,11 +3039,11 @@
                     if (modalMoveToGroupContainer.style.display === 'block') { 
                         newParentIdForItem = modalItemGroupSelector.value; 
                     }
-                    editItem(id, name, (type === 'link' ? url : undefined), ((type === 'link' || type === 'note') ? description : undefined), newParentIdForItem);
+                    editItem(id, name, (type === 'link' ? url : undefined), ((type === 'link' || type === 'note') ? description : undefined), newParentIdForItem, color);
                 }
                 else { 
                     // Add item
-                    addItem(type, name, url, parentForNewItem || null, null, undefined, null, ((type === 'link' || type === 'note') ? description : null));
+                    addItem(type, name, url, parentForNewItem || null, null, undefined, null, ((type === 'link' || type === 'note') ? description : null), color);
                 }
                 closeModal();
             };
@@ -2046,8 +3359,8 @@
                 if (action === 'toggle-pin') togglePinItem(itemId); 
                 else if (action === 'edit-link') openModal('link', itemId);
                 else if (action === 'edit-note') openModal('note', itemId);
-                else if (action === 'copy-link-url') navigator.clipboard.writeText(targetLi.dataset.url).catch(err => console.error('Error al copiar URL: ', err));
-                else if (action === 'copy-note-text') navigator.clipboard.writeText(targetLi.dataset.description).catch(err => console.error('Error al copiar texto: ', err));
+                else if (action === 'copy-link-url') copyText(targetLi.dataset.url || '', 'URL copiada');
+                else if (action === 'copy-note-text') copyText(targetLi.dataset.description || '', 'Texto copiado');
                 else if (action === 'delete-link') if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) deleteItem(itemId);
                 else if (action === 'delete-note') if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) deleteItem(itemId);
                 else if (action === 'copy-item') {
@@ -2072,7 +3385,8 @@
                         pastedItemWithNewIds.type, pastedItemWithNewIds.name, pastedItemWithNewIds.url,
                         actualPasteParentId, pastedItemWithNewIds.id,
                         pastedItemWithNewIds.isCollapsed, pastedItemWithNewIds.items,
-                        (pastedItemWithNewIds.type === 'link' || pastedItemWithNewIds.type === 'note') ? pastedItemWithNewIds.description : null
+                        (pastedItemWithNewIds.type === 'link' || pastedItemWithNewIds.type === 'note') ? pastedItemWithNewIds.description : null,
+                        pastedItemWithNewIds.color
                     );
                 } else if (action === 'edit-group') openModal('group', itemId);
                 else if (action === 'delete-group') if (confirm('¿Estás seguro de que quieres eliminar este grupo y todo su contenido?')) deleteItem(itemId);
@@ -2201,6 +3515,7 @@
                     if (customContextMenuEl.style.display === 'block') hideContextMenu();
                     else if (mainMenuDropdown.classList.contains('show')) mainMenuDropdown.classList.remove('show');
                     else if (itemModal.style.display === 'block') closeModal();
+                    else if (noteState) closeNotePanel();
                     else if (colorCustomizationModal && colorCustomizationModal.style.display === 'block') closeColorCustomizationModal();
                     else if (currentSearchTerm && document.activeElement !== searchInputEl) { 
                         searchInputEl.value = '';
@@ -2214,6 +3529,24 @@
                 }
             });
 
+            // Efecto onda al pulsar una tarjeta
+            linkOrganizerEl.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return;
+                const wrapper = e.target.closest('.item-content-wrapper');
+                const card = wrapper && wrapper.closest('.item');
+                if (!card) return;
+                const rect = card.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height) * 2;
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                card.appendChild(ripple);
+                ripple.addEventListener('animationend', () => ripple.remove());
+            });
+
+            buildColorSwatches();
             currentApplyInitialThemeFn(); 
             loadData(); 
         });
