@@ -1614,6 +1614,123 @@
             .notes-group-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--item-min-width)), 1fr)); gap: 14px; }
         }
 
+        /* =====================================================
+           ARRASTRAR UN ELEMENTO DENTRO DE UN GRUPO
+           ===================================================== */
+        @keyframes dropHint     { 50% { outline-color: var(--accent-primary); } }
+        @keyframes dropLabelIn  { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
+        @keyframes dropBarIn    { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes dropFlash {
+            0%   { transform: scale(1.07); box-shadow: 0 0 0 0 var(--accent-primary); }
+            55%  { box-shadow: 0 0 0 14px transparent; }
+            100% { transform: none; box-shadow: 0 0 0 0 transparent; }
+        }
+
+        /* Mientras arrastras: todos los grupos se marcan como destinos posibles */
+        .is-dragging-item #link-organizer .group-item:not(.dnd-source):not(.drop-into) {
+            outline: 2px dashed rgba(127,127,127,.6);
+            outline-offset: -5px;
+            animation: dropHint 1.5s ease-in-out infinite;
+        }
+        /* Y el grupo sobre el que estás se ilumina con un mensaje claro */
+        #link-organizer .group-item.drop-into {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: -3px;
+            background-color: var(--accent-primary-transparent);
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 0 5px var(--accent-primary-transparent), 0 16px 32px var(--shadow-color);
+            animation: none;
+            z-index: 5;
+        }
+        .group-item.drop-into::after {
+            content: attr(data-drop-label);
+            position: absolute; left: 10px; right: 10px; bottom: 10px;
+            padding: 7px 10px; border-radius: 8px;
+            background: var(--accent-primary); color: #fff;
+            font-size: .82em; font-weight: 600; text-align: center;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            pointer-events: none; z-index: 3;
+            animation: dropLabelIn .3s var(--ease-spring);
+        }
+        .group-item.drop-into .item-icon > * { transform: scale(1.4) rotate(-8deg); }
+
+        /* Migas de pan: soltar aquí para subir uno o varios niveles */
+        .is-dragging-item #breadcrumbs-container [data-drop-parent] {
+            outline: 1px dashed var(--accent-primary); outline-offset: 3px; border-radius: 6px;
+        }
+        #breadcrumbs-container [data-drop-parent].drop-into {
+            background: var(--accent-primary); color: #fff !important;
+            outline-style: solid; transform: scale(1.15);
+            box-shadow: 0 4px 14px var(--accent-primary-transparent);
+        }
+
+        /* Mensaje flotante mientras se arrastra */
+        .is-dragging-item::after {
+            content: 'Suelta sobre un grupo para meterlo dentro, o entre tarjetas para ordenar';
+            position: fixed; left: 50%; bottom: 24px;
+            transform: translate(-50%, 0);
+            max-width: 92vw; padding: 9px 18px; border-radius: 22px;
+            background: var(--bg-secondary); color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 6px 18px var(--shadow-color);
+            font-size: .85em; text-align: center;
+            pointer-events: none; z-index: 1500;
+            animation: dropBarIn .35s var(--ease-out);
+        }
+
+        /* La tarjeta "entra" en el grupo al soltarla; el grupo hace un destello */
+        .item.drop-absorb {
+            transform: scale(.25) !important; opacity: 0 !important;
+            transition: transform .26s ease-in, opacity .26s ease-in !important;
+        }
+        .item.drop-flash { animation: dropFlash .95s var(--ease-out); }
+
+        /* Aviso con botón "Deshacer" */
+        .toast { display: flex; align-items: center; }
+        .toast.has-action { pointer-events: auto; }
+        .toast-action {
+            margin-left: 14px; padding: 2px 4px; border: 0; background: transparent;
+            color: var(--accent-secondary); font: inherit; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .04em; cursor: pointer;
+            transition: transform .2s var(--ease-spring);
+        }
+        .toast-action:hover { transform: scale(1.1); }
+
+        /* ----- Arrastre propio: copia flotante, línea de inserción, sin reordenar en vivo ----- */
+        .dnd-ghost {
+            position: fixed; left: 0; top: 0; z-index: 3000;
+            display: flex; align-items: center; gap: 9px;
+            max-width: 240px; padding: 9px 15px; margin: 0;
+            border-radius: 12px; border: 2px solid var(--ghost-color, var(--accent-primary));
+            background: var(--bg-secondary); color: var(--text-primary);
+            font-size: .92em; font-weight: 600; white-space: nowrap;
+            pointer-events: none; will-change: transform;
+            box-shadow: 0 14px 30px rgba(0,0,0,.45);
+        }
+        .dnd-ghost i { flex-shrink: 0; color: var(--ghost-color, var(--accent-primary)); }
+        .dnd-ghost span { overflow: hidden; text-overflow: ellipsis; }
+        .item.dnd-source {
+            opacity: .35; transform: none !important; animation: none !important;
+            outline: 2px dashed var(--accent-primary); outline-offset: -4px;
+        }
+        .dnd-indicator {
+            position: fixed; z-index: 2500; width: 5px; border-radius: 3px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-transparent), 0 0 16px var(--accent-primary);
+            pointer-events: none; opacity: 0;
+            transition: left .1s var(--ease-out), top .1s var(--ease-out), height .1s, opacity .15s;
+        }
+        .dnd-indicator.show { opacity: 1; }
+        body.is-dragging-item, body.is-dragging-item * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+        .is-dragging-item #link-organizer .item:not(.drop-into):hover { transform: none !important; }
+        .drag-handle { touch-action: none; }
+        .item a, .item img { -webkit-user-drag: none; }
+        #backToParentBtn.drop-into {
+            background: var(--accent-primary); color: #fff; border-color: var(--accent-primary);
+            transform: scale(1.18); box-shadow: 0 6px 18px var(--accent-primary-transparent);
+        }
+        .is-dragging-item #backToParentBtn:not(.hidden) { outline: 1px dashed var(--accent-primary); outline-offset: 3px; }
+
     </style>
 </head>
 <body>
@@ -1879,8 +1996,7 @@
             let contextMenuMouseX = 0;
             let contextMenuMouseY = 0;
 
-            let draggedItemInfo = null;
-            let dropHandledByBackButton = false;
+            let flashGroupId = null;           // tarjeta que acaba de moverse o recibir algo: destello
             
             function getCurrentParentId() {
                 return currentViewStack.length > 0 ? currentViewStack[currentViewStack.length - 1] : null;
@@ -2126,150 +2242,338 @@
             }
 
 
-            function handleDragOverBackButton(event) {
-                event.preventDefault(); 
-                if (draggedItemInfo && !backToParentBtn.classList.contains('hidden')) {
-                    backToParentBtn.classList.add('drag-over-target');
-                }
-            }
-            function handleDragLeaveBackButton(event) {
-                backToParentBtn.classList.remove('drag-over-target');
-            }
-            function handleDropOnBackButton(event) {
-                event.preventDefault();
-                backToParentBtn.classList.remove('drag-over-target');
+            // =====================================================
+            //  ARRASTRAR Y SOLTAR
+            //  Las tarjetas NO se mueven mientras arrastras: solo una copia sigue al puntero,
+            //  el destino se resalta y, al ordenar, una línea marca dónde caerá.
+            // =====================================================
+            const dnd = {
+                pending: null, active: false, itemId: '', sourceEl: null,
+                ghost: null, indicator: null, hlEl: null,
+                offX: 0, offY: 0, x: 0, y: 0, raf: 0, suppressClick: false
+            };
 
-                if (!draggedItemInfo || !draggedItemInfo.id || backToParentBtn.classList.contains('hidden') || currentViewStack.length === 0) {
-                    return;
-                }
-                const itemIdToMove = draggedItemInfo.id;
-                let newParentId = null;
-                if (currentViewStack.length > 1) { 
-                    newParentId = currentViewStack[currentViewStack.length - 2]; 
-                } else if (currentViewStack.length === 1) { 
-                    newParentId = null; 
+            function canDropInto(itemId, targetParentId) {
+                const it = findItemRecursive(itemId);
+                if (!it) return false;
+                if (!targetParentId) return true;                              // Inicio
+                const tg = findItemRecursive(targetParentId);
+                if (!tg || tg.item.type !== 'group') return false;
+                if (itemId === targetParentId) return false;
+                if (it.item.type === 'group' && getDescendantIds(itemId).includes(targetParentId)) return false;
+                return true;
+            }
+
+            // Zonas: el centro de un grupo = "meter dentro"; bordes y tarjetas normales = ordenar (antes / después)
+            function pickGridTarget(cards, x, y, draggedId) {
+                if (!cards.length) return null;
+                const hit = cards.find(c => x >= c.rect.left && x <= c.rect.right && y >= c.rect.top && y <= c.rect.bottom);
+                let ref = hit;
+                if (hit) {
+                    if (hit.id === draggedId) return { kind: 'none' };
+                    if (hit.isGroup) {
+                        const fx = (x - hit.rect.left) / hit.rect.width, fy = (y - hit.rect.top) / hit.rect.height;
+                        if (fx > 0.12 && fx < 0.88 && fy > 0.12 && fy < 0.88) return { kind: 'group', id: hit.id };
+                    }
                 } else {
-                     return; 
+                    // En un hueco entre tarjetas: se toma la más cercana
+                    let best = Infinity;
+                    cards.forEach(c => {
+                        const dx = Math.max(c.rect.left - x, 0, x - c.rect.right);
+                        const dy = Math.max(c.rect.top - y, 0, y - c.rect.bottom);
+                        const d = dx * dx + dy * dy;
+                        if (d < best) { best = d; ref = c; }
+                    });
                 }
-                const itemResult = findItemRecursive(itemIdToMove);
-                if (!itemResult) {
-                    console.error("Elemento a mover no encontrado en los datos:", itemIdToMove);
-                    return;
-                }
-                const itemToMove = itemResult.item;
-                itemResult.parentArray.splice(itemResult.index, 1);
-                if (newParentId) {
-                    const newParentResult = findItemRecursive(newParentId);
-                    if (newParentResult && newParentResult.item.type === 'group') {
-                        if (!newParentResult.item.items) newParentResult.item.items = [];
-                        newParentResult.item.items.push(itemToMove);
-                    } else {
-                        console.error("Nuevo padre para arrastrar hacia atrás no encontrado o no es un grupo, moviendo a la raíz como alternativa.", newParentId);
-                        data.push(itemToMove); 
-                    }
-                } else { 
-                    data.push(itemToMove);
-                }
-                dropHandledByBackButton = true; 
-                saveData();
-                render(); 
+                if (!ref || ref.id === draggedId) return { kind: 'none' };
+                return { kind: 'reorder', refId: ref.id, after: x > ref.rect.left + ref.rect.width / 2 };
             }
-            
-            function initializeSortable(element, groupName, enabled = true) {
-                const existingIndex = sortableInstances.findIndex(instance => instance.el === element);
-                if (existingIndex !== -1) {
-                    sortableInstances[existingIndex].destroy();
-                    sortableInstances.splice(existingIndex, 1);
-                }
-                if (!element || !enabled) return;
 
-                const instance = new Sortable(element, {
-                    group: groupName,
-                    animation: 250,
-                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-                    handle: '.drag-handle',
-                    disabled: isFiltering(),
-                    ghostClass: 'sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    dragClass: 'sortable-drag',
-                    onStart: function(evt) {
-                        draggedItemInfo = { id: evt.item.dataset.id, element: evt.item };
-                        dropHandledByBackButton = false; 
-                        if (!backToParentBtn.classList.contains('hidden')) {
-                            backToParentBtn.addEventListener('dragover', handleDragOverBackButton);
-                            backToParentBtn.addEventListener('dragleave', handleDragLeaveBackButton);
-                            backToParentBtn.addEventListener('drop', handleDropOnBackButton);
-                        }
-                    },
-                    onMove: function (evt) {
-                        return true; 
-                    },
-                    onEnd: function (evt) {
-                        if (!backToParentBtn.classList.contains('hidden')) { 
-                            backToParentBtn.removeEventListener('dragover', handleDragOverBackButton);
-                            backToParentBtn.removeEventListener('dragleave', handleDragLeaveBackButton);
-                            backToParentBtn.removeEventListener('drop', handleDropOnBackButton);
-                            backToParentBtn.classList.remove('drag-over-target');
-                        }
-
-                        if (dropHandledByBackButton) {
-                            draggedItemInfo = null;
-                            dropHandledByBackButton = false; 
-                            return; 
-                        }
-
-                        const oldIndex = evt.oldDraggableIndex; 
-                        const newIndex = evt.newDraggableIndex; 
-
-                        const currentParentIdForSort = getCurrentParentId();
-                        let itemsArrayToSort;
-                        if (currentParentIdForSort) {
-                            const parentResult = findItemRecursive(currentParentIdForSort);
-                            if (!parentResult || !parentResult.item || !parentResult.item.items) {
-                                render(); 
-                                draggedItemInfo = null;
-                                return;
-                            }
-                            itemsArrayToSort = parentResult.item.items;
-                        } else {
-                            itemsArrayToSort = data;
-                        }
-
-                        if (oldIndex === newIndex && evt.from === evt.to) {
-                            draggedItemInfo = null; 
-                            return;
-                        }
-                        
-                        const newOrderIdsFromDom = Array.from(evt.to.children)
-                                                 .map(child => child.dataset.id)
-                                                 .filter(id => id); 
-                        const idsInContainer = new Set(newOrderIdsFromDom);
-                        const itemsById = new Map(itemsArrayToSort.map(item => [item.id, item]));
-                        const orderedItems = newOrderIdsFromDom.map(id => itemsById.get(id)).filter(Boolean);
-
-                        // Reordena solo los elementos de esta columna, sin alterar la posición de los demás.
-                        let orderCursor = 0;
-                        itemsArrayToSort.forEach((item, index) => {
-                            if (idsInContainer.has(item.id) && orderedItems[orderCursor]) {
-                                itemsArrayToSort[index] = orderedItems[orderCursor++];
-                            }
-                        });
-                        
-                        saveData();
-                        render(); 
-                        draggedItemInfo = null; 
-                    },
-                    onUnchoose: function(evt) { 
-                        if (!backToParentBtn.classList.contains('hidden')) {
-                            backToParentBtn.removeEventListener('dragover', handleDragOverBackButton);
-                            backToParentBtn.removeEventListener('dragleave', handleDragLeaveBackButton);
-                            backToParentBtn.removeEventListener('drop', handleDropOnBackButton);
-                            backToParentBtn.classList.remove('drag-over-target');
-                        }
-                        draggedItemInfo = null;
+            function computeDndTarget(x, y) {
+                const hit = document.elementFromPoint(x, y);   // la copia y la línea tienen pointer-events:none
+                if (hit) {
+                    const crumb = hit.closest('#breadcrumbs-container [data-drop-parent]');
+                    if (crumb) {
+                        const pid = crumb.dataset.dropParent || '';
+                        return canDropInto(dnd.itemId, pid) ? { kind: 'crumb', id: pid, el: crumb } : { kind: 'none' };
                     }
+                    const back = hit.closest('#backToParentBtn');
+                    if (back && !back.classList.contains('hidden') && currentViewStack.length > 0) {
+                        const pid = currentViewStack.length > 1 ? currentViewStack[currentViewStack.length - 2] : '';
+                        return canDropInto(dnd.itemId, pid) ? { kind: 'back', id: pid, el: back } : { kind: 'none' };
+                    }
+                }
+                const grid = mainItemsEl.getBoundingClientRect(), m = 24;
+                if (x < grid.left - m || x > grid.right + m || y < grid.top - m || y > grid.bottom + m) return { kind: 'none' };
+                const cards = Array.from(mainItemsEl.children)
+                    .filter(c => c.classList && c.classList.contains('item') && c.dataset.id)
+                    .map(c => ({ id: c.dataset.id, isGroup: c.classList.contains('group-item'), rect: c.getBoundingClientRect(), el: c }));
+                const t = pickGridTarget(cards, x, y, dnd.itemId);
+                if (!t) return { kind: 'none' };
+                if (t.kind === 'group') {
+                    if (!canDropInto(dnd.itemId, t.id)) return { kind: 'none' };
+                    t.el = cards.find(c => c.id === t.id).el;
+                } else if (t.kind === 'reorder') {
+                    t.rect = cards.find(c => c.id === t.refId).rect;
+                }
+                return t;
+            }
+
+            function setHighlight(el, label) {
+                if (dnd.hlEl !== el) {
+                    clearHighlight();
+                    if (el) el.classList.add('drop-into');
+                    dnd.hlEl = el || null;
+                }
+                if (el && label) el.dataset.dropLabel = label;
+            }
+            function clearHighlight() {
+                if (dnd.hlEl) { dnd.hlEl.classList.remove('drop-into'); delete dnd.hlEl.dataset.dropLabel; }
+                dnd.hlEl = null;
+            }
+            function showIndicator(rect, after) {
+                const ind = dnd.indicator;
+                if (!ind) return;
+                ind.style.height = rect.height + 'px';
+                ind.style.left = ((after ? rect.right + 3.5 : rect.left - 3.5) - 2.5) + 'px';
+                ind.style.top = rect.top + 'px';
+                ind.classList.add('show');
+            }
+            function hideIndicator() { if (dnd.indicator) dnd.indicator.classList.remove('show'); }
+
+            function updateDndTarget(x, y) {
+                const t = computeDndTarget(x, y);
+                dnd.target = t;
+                if (t.kind === 'group') {
+                    const g = findItemRecursive(t.id);
+                    setHighlight(t.el, 'Soltar en «' + (g ? g.item.name : 'grupo') + '»');
+                    hideIndicator();
+                } else if (t.kind === 'crumb' || t.kind === 'back') {
+                    setHighlight(t.el, '');
+                    hideIndicator();
+                } else if (t.kind === 'reorder') {
+                    clearHighlight();
+                    showIndicator(t.rect, t.after);
+                } else {
+                    clearHighlight();
+                    hideIndicator();
+                }
+            }
+
+            function startDnd(e) {
+                const pend = dnd.pending;
+                const card = pend && pend.card;
+                if (!card || !card.isConnected) { dnd.pending = null; return; }
+                const rect = card.getBoundingClientRect();
+                dnd.active = true;
+                dnd.itemId = pend.id;
+                dnd.sourceEl = card;
+                dnd.offX = pend.startX - rect.left;
+                dnd.offY = pend.startY - rect.top;
+                dnd.x = e.clientX; dnd.y = e.clientY;
+                dnd.target = null;
+
+                // La "copia" que sigue al puntero es una píldora pequeña: así nunca tapa el grupo de destino
+                const found = findItemRecursive(pend.id);
+                const it = found ? found.item : null;
+                const ghost = document.createElement('div');
+                ghost.className = 'dnd-ghost';
+                const gi = document.createElement('i');
+                gi.className = 'fas ' + (it && it.type === 'group' ? 'fa-folder' : it && it.type === 'note' ? 'fa-sticky-note' : 'fa-link');
+                const gt = document.createElement('span');
+                gt.textContent = it ? it.name : '';
+                ghost.appendChild(gi);
+                ghost.appendChild(gt);
+                if (it && it.color) ghost.style.setProperty('--ghost-color', it.color);
+                document.body.appendChild(ghost);
+                dnd.ghost = ghost;
+
+                const ind = document.createElement('div');
+                ind.className = 'dnd-indicator';
+                document.body.appendChild(ind);
+                dnd.indicator = ind;
+
+                card.classList.add('dnd-source');
+                document.body.classList.add('is-dragging-item');
+                try { card.setPointerCapture(pend.pointerId); } catch (err) {}
+                if (window.getSelection) window.getSelection().removeAllRanges();
+                dnd.raf = requestAnimationFrame(dndTick);
+            }
+
+            function positionGhost(x, y) {
+                if (dnd.ghost) dnd.ghost.style.transform = 'translate(' + (x + 16) + 'px,' + Math.max(6, y - 48) + 'px) rotate(-2deg)';
+            }
+
+            // Auto-scroll al acercarte al borde de la ventana
+            function dndTick() {
+                if (!dnd.active) return;
+                const edge = 70, max = 22;
+                let dy = 0;
+                if (dnd.y < edge) dy = -Math.ceil((edge - dnd.y) / edge * max);
+                else if (dnd.y > window.innerHeight - edge) dy = Math.ceil((dnd.y - (window.innerHeight - edge)) / edge * max);
+                if (dy) {
+                    const before = window.scrollY;
+                    window.scrollBy(0, dy);
+                    if (window.scrollY !== before) updateDndTarget(dnd.x, dnd.y);
+                }
+                dnd.raf = requestAnimationFrame(dndTick);
+            }
+
+            function cleanupDnd() {
+                cancelAnimationFrame(dnd.raf);
+                if (dnd.ghost) dnd.ghost.remove();
+                if (dnd.indicator) dnd.indicator.remove();
+                clearHighlight();
+                if (dnd.sourceEl) dnd.sourceEl.classList.remove('dnd-source');
+                document.body.classList.remove('is-dragging-item');
+                dnd.ghost = null; dnd.indicator = null; dnd.sourceEl = null;
+                dnd.active = false; dnd.pending = null;
+            }
+            function cancelDnd() {
+                if (!dnd.active) { dnd.pending = null; return; }
+                dnd.suppressClick = true;
+                setTimeout(() => { dnd.suppressClick = false; }, 80);
+                cleanupDnd();
+            }
+
+            function onDndPointerDown(e) {
+                if (e.button !== 0 || isFiltering() || dnd.active) return;
+                const card = e.target.closest('#main-items > .item');
+                if (!card || !card.dataset.id) return;
+                const onHandle = !!e.target.closest('.drag-handle');
+                if (!onHandle) {
+                    if (e.pointerType === 'touch') return;                    // en táctil solo desde el asa (para poder hacer scroll)
+                    if (e.target.closest('.item-actions-container, button, input, textarea, select')) return;
+                }
+                dnd.pending = { card, id: card.dataset.id, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, onHandle };
+                if (onHandle) e.preventDefault();                              // evita seleccionar texto
+            }
+            function onDndPointerMove(e) {
+                if (dnd.pending && !dnd.active) {
+                    const dist = Math.hypot(e.clientX - dnd.pending.startX, e.clientY - dnd.pending.startY);
+                    if (dist < (dnd.pending.onHandle ? 4 : 8)) return;
+                    startDnd(e);
+                }
+                if (!dnd.active) return;
+                e.preventDefault();
+                dnd.x = e.clientX; dnd.y = e.clientY;
+                positionGhost(dnd.x, dnd.y);
+                updateDndTarget(dnd.x, dnd.y);
+            }
+            function onDndPointerUp(e) {
+                if (!dnd.active) { dnd.pending = null; return; }
+                const itemId = dnd.itemId, srcEl = dnd.sourceEl;
+                const target = computeDndTarget(e.clientX, e.clientY);
+                dnd.suppressClick = true;
+                setTimeout(() => { dnd.suppressClick = false; }, 80);
+                cleanupDnd();
+                performDrop(itemId, srcEl, target);
+            }
+            mainItemsEl.addEventListener('pointerdown', onDndPointerDown);
+            mainItemsEl.addEventListener('dragstart', (e) => e.preventDefault());      // enlaces: sin arrastre nativo
+            document.addEventListener('pointermove', onDndPointerMove, { passive: false });
+            document.addEventListener('pointerup', onDndPointerUp);
+            document.addEventListener('pointercancel', cancelDnd);
+            window.addEventListener('blur', cancelDnd);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && dnd.active) { e.preventDefault(); e.stopPropagation(); cancelDnd(); }
+            }, true);
+            document.addEventListener('click', (e) => {                                   // el clic que sigue a un arrastre no abre nada
+                if (dnd.suppressClick) { e.preventDefault(); e.stopPropagation(); dnd.suppressClick = false; }
+            }, true);
+
+            function performDrop(itemId, srcEl, target) {
+                if (!target || target.kind === 'none') return;
+                if (target.kind === 'reorder') reorderMainItem(itemId, target.refId, target.after);
+                else handleDropIntoTarget(srcEl, itemId, target);
+            }
+
+            // Reordenar: solo cambia la posición de lo que se ve; lo demás (p. ej. las notas) no se toca
+            function reorderMainItem(itemId, refId, after) {
+                if (itemId === refId) return;
+                const parentId = getCurrentParentId();
+                let arr = data;
+                if (parentId) {
+                    const pr = findItemRecursive(parentId);
+                    if (!pr || !pr.item.items) { render(); return; }
+                    arr = pr.item.items;
+                }
+                const domIds = Array.from(mainItemsEl.children).map(c => c.dataset && c.dataset.id).filter(Boolean);
+                const without = domIds.filter(id => id !== itemId);
+                let idx = without.indexOf(refId);
+                if (idx === -1 || !domIds.includes(itemId)) return;
+                if (after) idx++;
+                const newOrder = [...without.slice(0, idx), itemId, ...without.slice(idx)];
+                if (newOrder.join('|') === domIds.join('|')) return;                      // quedaría igual
+                const byId = new Map(arr.map(i => [i.id, i]));
+                const ordered = newOrder.map(id => byId.get(id)).filter(Boolean);
+                const inView = new Set(newOrder);
+                let c = 0;
+                for (let i = 0; i < arr.length; i++) {
+                    if (inView.has(arr[i].id) && ordered[c]) arr[i] = ordered[c++];
+                }
+                // Animación suave: cada tarjeta se desliza desde su sitio anterior al nuevo
+                const before = new Map();
+                Array.from(mainItemsEl.children).forEach(el => { if (el.dataset && el.dataset.id) before.set(el.dataset.id, el.getBoundingClientRect()); });
+                flashGroupId = itemId;
+                saveData();
+                render();
+                Array.from(mainItemsEl.children).forEach(el => {
+                    const b = before.get(el.dataset && el.dataset.id);
+                    if (!b || !el.animate) return;
+                    const a = el.getBoundingClientRect();
+                    const dx = b.left - a.left, dy = b.top - a.top;
+                    if (dx || dy) el.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 340, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
                 });
-                sortableInstances.push(instance);
+            }
+
+            // Mueve un elemento a un grupo (parentId '' = Inicio) y devuelve lo necesario para deshacerlo
+            function moveItemToParent(itemId, parentId) {
+                const res = findItemRecursive(itemId);
+                if (!res) return null;
+                const fromDet = findParentDetails(itemId, data);
+                const info = { itemId, fromParentId: (fromDet && fromDet.parentId) || '', fromIndex: res.index, toParentId: parentId || '' };
+                res.parentArray.splice(res.index, 1);
+                let dest = data;
+                if (parentId) {
+                    const pr = findItemRecursive(parentId);
+                    if (pr && pr.item.type === 'group') {
+                        if (!pr.item.items) pr.item.items = [];
+                        dest = pr.item.items;
+                    }
+                }
+                dest.push(res.item);
+                return info;
+            }
+            function undoMoveItem(info) {
+                const res = findItemRecursive(info.itemId);
+                if (!res) return;
+                res.parentArray.splice(res.index, 1);
+                let arr = data;
+                if (info.fromParentId) {
+                    const pr = findItemRecursive(info.fromParentId);
+                    if (pr && pr.item.type === 'group') {
+                        if (!pr.item.items) pr.item.items = [];
+                        arr = pr.item.items;
+                    }
+                }
+                arr.splice(Math.min(info.fromIndex, arr.length), 0, res.item);
+                saveData();
+                render();
+            }
+            function handleDropIntoTarget(srcEl, itemId, target) {
+                const parentId = target.id || '';
+                if (!canDropInto(itemId, parentId)) { render(); return; }
+                const info = moveItemToParent(itemId, parentId);
+                if (!info) { render(); return; }
+                saveData();
+                const moved = findItemRecursive(itemId);
+                const dest = parentId ? findItemRecursive(parentId) : null;
+                if (srcEl && srcEl.classList) srcEl.classList.add('drop-absorb');          // la tarjeta "entra" en el grupo
+                flashGroupId = parentId || null;
+                showToast('«' + (moved ? moved.item.name : 'Elemento') + '» movido a «' + (dest ? dest.item.name : 'Inicio') + '»',
+                          { label: 'Deshacer', onClick: () => undoMoveItem(info) });
+                setTimeout(() => render(), 270);
             }
 
             // =====================================================
@@ -2292,11 +2596,23 @@
 
             function isFiltering() { return !!(currentSearchTerm.trim() || activeColorFilter); }
 
-            function showToast(msg) {
-                toastEl.textContent = msg;
+            function showToast(msg, action) {
+                toastEl.textContent = '';
+                const span = document.createElement('span');
+                span.textContent = msg;
+                toastEl.appendChild(span);
+                if (action) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'toast-action';
+                    btn.textContent = action.label;
+                    btn.onclick = () => { clearTimeout(toastTimer); toastEl.classList.remove('show'); action.onClick(); };
+                    toastEl.appendChild(btn);
+                }
+                toastEl.classList.toggle('has-action', !!action);
                 toastEl.classList.add('show');
                 clearTimeout(toastTimer);
-                toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+                toastTimer = setTimeout(() => toastEl.classList.remove('show'), action ? 5500 : 1800);
             }
 
             async function copyText(text, okMsg = 'Copiado') {
@@ -2990,6 +3306,7 @@
                 itemDiv.dataset.type = item.type;
                 if (noteState && noteState.id === item.id) itemDiv.classList.add('note-active');
                 if (flashNoteId && flashNoteId === item.id) itemDiv.classList.add('note-flash');
+                if (flashGroupId && flashGroupId === item.id) itemDiv.classList.add('drop-flash');
                 applyItemColor(itemDiv, item);
 
                 const dragHandle = document.createElement('span');
@@ -3407,7 +3724,7 @@
                     section.appendChild(body);
                     notesListEl.appendChild(section);
 
-                    notesSortables.push(new Sortable(list, {
+                    if (typeof Sortable !== 'undefined') notesSortables.push(new Sortable(list, {
                         group: 'notes-shared',
                         animation: 220,
                         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
@@ -3445,6 +3762,7 @@
                     rootLink.href = '#';
                     rootLink.innerHTML = '<i class="fas fa-home"></i>';
                     rootLink.title = "Inicio / Raíz";
+                    rootLink.dataset.dropParent = '';
                     rootLink.onclick = (e) => { 
                         e.preventDefault(); 
                         currentViewStack = []; 
@@ -3465,6 +3783,7 @@
                                 const groupLink = document.createElement('a');
                                 groupLink.href = '#';
                                 groupLink.title = itemName; 
+                                groupLink.dataset.dropParent = groupId;
                                 const groupLinkText = document.createElement('span');
                                 groupLinkText.className = 'breadcrumb-item-text';
                                 groupLinkText.textContent = itemName;
@@ -3600,12 +3919,12 @@
                 }
                 animateNotesRail = false;
                 flashNoteId = null;
+                flashGroupId = null;
                 renderedIds = new Set(itemsToRender.map(i => i.id));
                 lastViewKey = viewKey;
                 lastViewDepth = viewDepth;
 
 
-                initializeSortable(mainItemsEl, 'main-grid', mainToRender.length > 0);
                 updateRootVarRgbEquivalents(); 
             };
             
@@ -4453,7 +4772,7 @@
                         render();
                         searchInputEl.blur(); 
                     }
-                    else if (currentViewStack.length > 0 && !backToParentBtn.classList.contains('hidden') && !sortableInstances.some(instance => instance.el.querySelector('.sortable-drag'))) { 
+                    else if (currentViewStack.length > 0 && !backToParentBtn.classList.contains('hidden') && !dnd.active) { 
                         backToParentBtn.click();
                     }
                 }
