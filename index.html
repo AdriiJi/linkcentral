@@ -628,11 +628,9 @@
             word-break: break-word;
             line-height: 1.4;
             margin-top: auto; 
+            max-height: calc(1.4em * 3);          /* 3 líneas; "Ver más" lo despliega con animación */
             overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 3; 
-            -webkit-box-orient: vertical;
+            transition: max-height .4s var(--ease-out);
         }
         /* Notes description styling */
         .note-item-description {
@@ -1731,6 +1729,28 @@
         }
         .is-dragging-item #backToParentBtn:not(.hidden) { outline: 1px dashed var(--accent-primary); outline-offset: 3px; }
 
+        /* ----- Descripción de los enlaces: "Ver más / Ver menos" sin abrir el editor ----- */
+        .link-item.desc-more:not(.desc-open) .link-item-description {
+            -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent);
+            mask-image: linear-gradient(to bottom, #000 58%, transparent);
+        }
+        .desc-toggle {
+            display: none; align-self: flex-start;
+            margin: 6px 0 0 -9px; padding: 2px 9px; border-radius: 12px;
+            font-size: .78em; font-weight: 600; line-height: 1.5;
+            color: var(--item-color, var(--accent-primary));
+            cursor: pointer; user-select: none; outline: none;
+            transition: background-color .2s, transform .25s var(--ease-spring);
+        }
+        .link-item.desc-more .desc-toggle { display: inline-flex; align-items: center; gap: 6px; }
+        .desc-toggle:hover, .desc-toggle:focus-visible { background: var(--accent-primary-transparent); transform: translateY(-1px); }
+        .desc-toggle:active { transform: scale(.94); }
+        .desc-toggle i { font-size: .8em; transition: transform .35s var(--ease-spring); }
+        .link-item.desc-open .desc-toggle i { transform: rotate(180deg); }
+        .desc-toggle .dt-less { display: none; }
+        .link-item.desc-open .desc-toggle .dt-more { display: none; }
+        .link-item.desc-open .desc-toggle .dt-less { display: inline; }
+
     </style>
 </head>
 <body>
@@ -1997,6 +2017,7 @@
             let contextMenuMouseY = 0;
 
             let flashGroupId = null;           // tarjeta que acaba de moverse o recibir algo: destello
+            const expandedDescIds = new Set(); // enlaces cuya descripción está desplegada
             
             function getCurrentParentId() {
                 return currentViewStack.length > 0 ? currentViewStack[currentViewStack.length - 1] : null;
@@ -3299,6 +3320,33 @@
             window.addEventListener('beforeunload', flushNoteSave);
             document.addEventListener('visibilitychange', () => { if (document.hidden) flushNoteSave(); });
 
+            // Alto de 3 líneas de descripción
+            function descCollapsedPx(d) {
+                const lh = parseFloat(getComputedStyle(d).lineHeight);
+                return (isNaN(lh) ? parseFloat(getComputedStyle(d).fontSize) * 1.4 : lh) * 3;
+            }
+            // Muestra "Ver más" solo en las tarjetas cuya descripción no cabe en 3 líneas
+            function updateDescriptionOverflow() {
+                document.querySelectorAll('.link-item').forEach(card => {
+                    const d = card.querySelector('.link-item-description');
+                    if (!d) return;
+                    const collapsed = descCollapsedPx(d);
+                    const prev = d.style.maxHeight;
+                    d.style.transition = 'none';
+                    d.style.maxHeight = 'none';
+                    const full = d.scrollHeight;                       // alto real del texto, sin recortar
+                    d.style.maxHeight = prev;
+                    d.offsetHeight;                                    // fuerza el cálculo antes de reactivar la animación
+                    d.style.transition = '';
+                    const more = full > collapsed + 2;
+                    card.classList.toggle('desc-more', more);
+                    if (!more) { card.classList.remove('desc-open'); d.style.maxHeight = ''; return; }
+                    d.style.maxHeight = (card.classList.contains('desc-open') ? full : collapsed) + 'px';
+                });
+            }
+            let descResizeTimer = null;
+            window.addEventListener('resize', () => { clearTimeout(descResizeTimer); descResizeTimer = setTimeout(updateDescriptionOverflow, 150); });
+
             function createDOMElement(item, pathInfo = null) {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = `item ${item.type}-item ${item.isPinned ? 'pinned' : ''}`; 
@@ -3470,6 +3518,27 @@
                     descriptionDiv.className = 'link-item-description';
                     descriptionDiv.textContent = item.description;
                     contentWrapper.appendChild(descriptionDiv);
+
+                    // "Ver más / Ver menos": solo se muestra si el texto no cabe en 3 líneas (lo decide updateDescriptionOverflow)
+                    const descToggle = document.createElement('span');
+                    descToggle.className = 'desc-toggle';
+                    descToggle.setAttribute('role', 'button');
+                    descToggle.tabIndex = 0;
+                    descToggle.setAttribute('aria-expanded', expandedDescIds.has(item.id) ? 'true' : 'false');
+                    descToggle.innerHTML = '<span class="dt-more">Ver más</span><span class="dt-less">Ver menos</span><i class="fas fa-chevron-down"></i>';
+                    const toggleDescription = (e) => {
+                        e.preventDefault();                       // el enlace de la tarjeta no se abre
+                        e.stopPropagation();
+                        const open = !itemDiv.classList.contains('desc-open');
+                        itemDiv.classList.toggle('desc-open', open);
+                        descToggle.setAttribute('aria-expanded', String(open));
+                        if (open) expandedDescIds.add(item.id); else expandedDescIds.delete(item.id);
+                        descriptionDiv.style.maxHeight = (open ? descriptionDiv.scrollHeight : descCollapsedPx(descriptionDiv)) + 'px';
+                    };
+                    descToggle.addEventListener('click', toggleDescription);
+                    descToggle.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') toggleDescription(e); });
+                    contentWrapper.appendChild(descToggle);
+                    if (expandedDescIds.has(item.id)) itemDiv.classList.add('desc-open');
                 } else if (item.type === 'note' && item.description && item.description.trim() !== '') {
                     const preview = document.createElement('div');
                     const isLong = item.description.split('\n').length > 8 || item.description.length > 360;
@@ -3920,6 +3989,7 @@
                 animateNotesRail = false;
                 flashNoteId = null;
                 flashGroupId = null;
+                requestAnimationFrame(updateDescriptionOverflow);
                 renderedIds = new Set(itemsToRender.map(i => i.id));
                 lastViewKey = viewKey;
                 lastViewDepth = viewDepth;
