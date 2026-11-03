@@ -1751,6 +1751,127 @@
         .link-item.desc-open .desc-toggle .dt-more { display: none; }
         .link-item.desc-open .desc-toggle .dt-less { display: inline; }
 
+        /* =====================================================
+           IMÁGENES: tarjetas, notas, visor
+           ===================================================== */
+        /* --- Tarjeta de imagen suelta --- */
+        .image-item { min-height: 150px; }
+        .image-item .image-wrapper {
+            position: absolute; inset: 0; padding: 0;
+            background: var(--bg-primary); overflow: hidden; cursor: zoom-in;
+        }
+        .image-item .image-ph {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2em; color: var(--text-secondary); opacity: .35;
+        }
+        .image-item-img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0;
+            transition: opacity .4s, transform .6s var(--ease-out);
+        }
+        .image-item-img.loaded { opacity: 1; }
+        .image-item:hover .image-item-img { transform: scale(1.07); }
+        .image-item-caption {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            padding: 30px 12px 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,.78));
+            color: #fff; font-weight: 600; font-size: .9em;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            pointer-events: none;
+        }
+        .image-item .item-actions-container { background-color: rgba(0,0,0,.55); z-index: 3; }
+        .image-item .item-actions-container button { color: #fff; }
+        .image-item .drag-handle { z-index: 3; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+
+        /* --- Imágenes dentro de las notas --- */
+        .note-img-block { margin: 6px 0; }
+        .note-img {
+            display: block; max-width: 100%; max-height: 360px; object-fit: contain;
+            border-radius: 8px; border: 1px solid var(--border-color);
+            background: rgba(127,127,127,.1); cursor: zoom-in;
+            opacity: 0; transition: opacity .3s, transform .3s var(--ease-spring);
+        }
+        .note-img:hover { transform: scale(1.01); }
+        .note-preview .note-img { max-height: 96px; }
+        .note-inline-img { height: 1.5em; vertical-align: middle; border-radius: 4px; cursor: zoom-in; opacity: 0; transition: opacity .3s; }
+        .note-img.loaded, .note-inline-img.loaded { opacity: 1; }
+        .img-missing {
+            opacity: 1 !important; min-width: 70px; min-height: 44px;
+            background: repeating-linear-gradient(45deg, rgba(127,127,127,.18), rgba(127,127,127,.18) 6px, transparent 6px, transparent 12px);
+        }
+
+        /* Miniaturas de las imágenes de la nota (modo Editar) */
+        .note-img-strip { display: flex; flex-wrap: wrap; gap: 10px; padding: 2px 0 4px; }
+        .note-img-strip[hidden] { display: none; }
+        .note-panel.mode-view .note-img-strip { display: none; }
+        .nis-item { position: relative; }
+        .nis-item img {
+            display: block; width: 64px; height: 64px; object-fit: cover;
+            border-radius: 8px; border: 1px solid var(--border-color); cursor: zoom-in;
+            opacity: 0; transition: opacity .3s, transform .25s var(--ease-spring);
+        }
+        .nis-item img.loaded { opacity: 1; }
+        .nis-item img:hover { transform: scale(1.06); }
+        .nis-remove {
+            position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; padding: 0;
+            border: 0; border-radius: 50%; background: var(--danger); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: .65em; cursor: pointer;
+            opacity: 0; transform: scale(.6);
+            transition: opacity .2s, transform .25s var(--ease-spring);
+        }
+        .nis-item:hover .nis-remove, .nis-remove:focus-visible { opacity: 1; transform: scale(1); }
+
+        /* --- Aviso al arrastrar archivos desde el escritorio --- */
+        body.is-dropping-files::before {
+            content: 'Suelta las imágenes para añadirlas';
+            position: fixed; inset: 14px; z-index: 3500;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px dashed var(--accent-primary); border-radius: 18px;
+            background: rgba(24,27,40,.82); color: var(--text-primary);
+            font-size: 1.3em; font-weight: 600;
+            pointer-events: none; animation: fadeIn .2s;
+        }
+
+        /* --- Visor a pantalla completa --- */
+        .lightbox {
+            position: fixed; inset: 0; z-index: 4000;
+            display: flex; align-items: center; justify-content: center;
+            visibility: hidden; opacity: 0;
+            transition: opacity .25s, visibility 0s .25s;
+        }
+        .lightbox.open { visibility: visible; opacity: 1; transition: opacity .25s; }
+        .lb-backdrop { position: absolute; inset: 0; background: rgba(8,10,16,.9); backdrop-filter: blur(6px); }
+        .lb-figure {
+            position: relative; margin: 0; max-width: 92vw; max-height: 92vh;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            transform: scale(.92); transition: transform .4s var(--ease-spring);
+        }
+        .lightbox.open .lb-figure { transform: none; }
+        #lbImg {
+            display: block; max-width: 92vw; max-height: calc(100vh - 160px); object-fit: contain;
+            border-radius: 8px; box-shadow: 0 24px 70px rgba(0,0,0,.65);
+            opacity: 0; transition: opacity .25s;
+        }
+        #lbImg.loaded { opacity: 1; }
+        .lb-caption { max-width: 80vw; text-align: center; color: #e8e9ef; font-size: .95em; min-height: 1.2em; }
+        .lb-btn {
+            position: absolute; z-index: 2; width: 44px; height: 44px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            border: 0; border-radius: 50%;
+            background: rgba(255,255,255,.12); color: #fff; font-size: 1.05em;
+            cursor: pointer; text-decoration: none;
+            transition: background-color .2s, transform .25s var(--ease-spring);
+        }
+        .lb-btn:hover { background: rgba(255,255,255,.26); transform: scale(1.1); }
+        .lb-close { top: 18px; right: 18px; }
+        .lb-download { top: 18px; right: 72px; }
+        .lb-prev { left: 18px; top: 50%; margin-top: -22px; }
+        .lb-next { right: 18px; top: 50%; margin-top: -22px; }
+        .lightbox.lb-single .lb-prev, .lightbox.lb-single .lb-next { display: none; }
+        .lb-counter { position: absolute; z-index: 2; top: 30px; left: 24px; color: #cfd2dd; font-size: .85em; }
+        body.lb-open { overflow: hidden; }
+
     </style>
 </head>
 <body>
@@ -1764,6 +1885,7 @@
                 <div class="header-menu-container">
                     <button id="showAddLinkModalBtn" class="header-action-button" title="Añadir Enlace"><i class="fas fa-link"></i></button>
                     <button id="showAddGroupModalBtn" class="header-action-button" title="Añadir Grupo"><i class="fas fa-folder-plus"></i></button>
+                    <button id="showAddImageBtn" class="header-action-button" title="Añadir imagen (también puedes pegarla o arrastrarla)"><i class="fas fa-image"></i></button>
                     <button id="mainMenuToggle" class="header-action-button" title="Más opciones"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="main-menu-dropdown" id="mainMenuDropdown">
                         <button id="exportDataBtn"><i class="fas fa-file-export"></i> Exportar</button>
@@ -1847,7 +1969,8 @@
                         <button type="button" data-note-action="outdent" title="Quitar sangría (Mayús+Tab)"><i class="fas fa-outdent"></i></button>
                         <button type="button" data-note-action="indent" title="Añadir sangría (Tab)"><i class="fas fa-indent"></i></button>
                         <span class="tb-sep"></span>
-                        <button type="button" data-note-action="date" title="Insertar fecha y hora"><i class="fas fa-clock"></i></button>
+                        <button type="button" data-note-action="image" title="Insertar imagen (también puedes pegarla)"><i class="fas fa-image"></i></button>
+                <button type="button" data-note-action="date" title="Insertar fecha y hora"><i class="fas fa-clock"></i></button>
                     </div>
                     <textarea id="modalItemDescription"></textarea>
                     <div id="noteStats" class="note-stats" style="display:none;"></div>
@@ -1930,10 +2053,12 @@
                 <button type="button" data-note-action="outdent" title="Quitar sangría (Mayús+Tab)"><i class="fas fa-outdent"></i></button>
                 <button type="button" data-note-action="indent" title="Añadir sangría (Tab)"><i class="fas fa-indent"></i></button>
                 <span class="tb-sep"></span>
+                <button type="button" data-note-action="image" title="Insertar imagen (también puedes pegarla)"><i class="fas fa-image"></i></button>
                 <button type="button" data-note-action="date" title="Insertar fecha y hora"><i class="fas fa-clock"></i></button>
             </div>
             <textarea id="notePanelText" placeholder="Escribe tu nota… Usa Tareas para crear una lista con casillas."></textarea>
             <div id="notePanelView" class="note-view" aria-label="Vista de la nota"></div>
+            <div id="noteImgStrip" class="note-img-strip" hidden></div>
             <div id="notePanelColors" class="color-swatches" aria-label="Color de la nota"></div>
         </div>
         <div class="note-panel-footer">
@@ -1943,6 +2068,22 @@
     </aside>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <input type="file" id="imageFileInput" accept="image/*" multiple hidden>
+    <input type="file" id="noteImageInput" accept="image/*" multiple hidden>
+
+    <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-label="Visor de imágenes">
+        <div class="lb-backdrop" id="lbBackdrop"></div>
+        <span class="lb-counter" id="lbCounter"></span>
+        <a class="lb-btn lb-download" id="lbDownload" title="Descargar imagen"><i class="fas fa-download"></i></a>
+        <button type="button" class="lb-btn lb-close" id="lbClose" title="Cerrar (Esc)"><i class="fas fa-times"></i></button>
+        <button type="button" class="lb-btn lb-prev" id="lbPrev" title="Anterior (←)"><i class="fas fa-chevron-left"></i></button>
+        <button type="button" class="lb-btn lb-next" id="lbNext" title="Siguiente (→)"><i class="fas fa-chevron-right"></i></button>
+        <figure class="lb-figure">
+            <img id="lbImg" alt="">
+            <figcaption class="lb-caption" id="lbCaption"></figcaption>
+        </figure>
+    </div>
 
 
     <script>
@@ -2178,6 +2319,8 @@
                 } else if (itemToEdit.type === 'note') {
                     if ((newDescription || '') !== (itemToEdit.description || '')) itemToEdit.updatedAt = Date.now();
                     itemToEdit.description = newDescription || '';
+                } else if (itemToEdit.type === 'image') {
+                    itemToEdit.description = newDescription || '';
                 }
 
                 const currentParentDetails = findParentDetails(id, data); 
@@ -2400,7 +2543,7 @@
                 const ghost = document.createElement('div');
                 ghost.className = 'dnd-ghost';
                 const gi = document.createElement('i');
-                gi.className = 'fas ' + (it && it.type === 'group' ? 'fa-folder' : it && it.type === 'note' ? 'fa-sticky-note' : 'fa-link');
+                gi.className = 'fas ' + (it && it.type === 'group' ? 'fa-folder' : it && it.type === 'note' ? 'fa-sticky-note' : it && it.type === 'image' ? 'fa-image' : 'fa-link');
                 const gt = document.createElement('span');
                 gt.textContent = it ? it.name : '';
                 ghost.appendChild(gi);
@@ -2754,6 +2897,7 @@
                 // Se protegen el código y las URLs para que el formato no las rompa
                 const stash = [];
                 const hold = (html) => { stash.push(html); return '\u0001' + (stash.length - 1) + '\u0002'; };
+                t = t.replace(/!\[([^\]]*)\]\(img:([\w-]+)\)/g, (m, alt, id) => hold('<img class="note-inline-img" data-img-id="' + id + '" alt="' + alt + '">'));
                 t = t.replace(/`([^`]+)`/g, (m, c) => hold('<code>' + c + '</code>'));
                 t = t.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, (m, u) => hold('<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>'));
                 t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -2769,7 +2913,9 @@
                     const lvl = Math.min(6, Math.floor(indent / 2));
                     const st = lvl ? ` style="--lvl:${lvl}"` : '';
                     let m;
-                    if ((m = line.match(/^\s*- \[([ xX])\] ?(.*)$/))) {
+                    if ((m = line.match(/^\s*!\[([^\]]*)\]\(img:([\w-]+)\)\s*$/))) {
+                        out += `<div class="note-line note-img-block"><img class="note-img" data-img-id="${m[2]}" data-line="${i}" alt="${escapeHTML(m[1])}"></div>`;
+                    } else if ((m = line.match(/^\s*- \[([ xX])\] ?(.*)$/))) {
                         const done = m[1].toLowerCase() === 'x';
                         out += `<div class="note-line note-check${done ? ' is-done' : ''}"${st}><input type="checkbox" data-line="${i}"${done ? ' checked' : ''}><span class="nc-text">${inlineMd(m[2])}</span></div>`;
                     } else if ((m = line.match(/^\s*[-*] (.*)$/))) {
@@ -2959,6 +3105,9 @@
                     const ns = Math.max(ls, start + first);
                     ta.setSelectionRange(ns, Math.max(ns, end + total));
 
+                } else if (action === 'image') {
+                    pickImagesForTextarea(ta);
+
                 } else if (action === 'date') {
                     const stamp = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     replaceText(ta, start, end, stamp);
@@ -3059,9 +3208,9 @@
 
             function deriveNoteName(description) {
                 const firstLine = (description || '').split('\n')
-                    .map(l => l.replace(/^\s*(- \[[ xX]\] ?|[-*] |#{1,3} |\d+\. |> ?)/, '').replace(/(\*\*|~~|==|`)/g, '').trim())
+                    .map(l => l.replace(/!\[([^\]]*)\]\(img:[\w-]+\)/g, '$1').replace(/^\s*(- \[[ xX]\] ?|[-*] |#{1,3} |\d+\. |> ?)/, '').replace(/(\*\*|~~|==|`)/g, '').trim())
                     .find(l => l && !/^[-*_=]{3,}$/.test(l));
-                if (!firstLine) return '';
+                if (!firstLine) return /\]\(img:/.test(description || '') ? 'Nota con imágenes' : '';
                 return firstLine.length > 40 ? firstLine.slice(0, 40).trimEnd() + '…' : firstLine;
             }
 
@@ -3076,6 +3225,7 @@
                 const t = notePanelText.value;
                 const words = t.trim() ? t.trim().split(/\s+/).length : 0;
                 notePanelStats.textContent = `${words} palabras · ${t.length} caracteres`;
+                updateNoteImgStrip();
                 const prog = checklistProgress(t);
                 noteTaskInfo.hidden = prog.total === 0;
                 if (prog.total > 0) {
@@ -3269,6 +3419,7 @@
                 notePanelView.innerHTML = text.trim()
                     ? renderNoteHTML(text)
                     : '<p class="note-view-empty"><i class="fas fa-pen"></i>Nota vacía. Haz clic aquí para escribir.</p>';
+                hydrateImages(notePanelView);                       // las imágenes de la nota se cargan desde IndexedDB
             }
             function setNoteMode(mode, focusEditor = true, remember = false) {
                 noteMode = mode === 'view' ? 'view' : 'edit';
@@ -3306,7 +3457,7 @@
                     scheduleNoteSave();
                     return;
                 }
-                if (e.target.closest('a')) return;
+                if (e.target.closest('a') || e.target.closest('img[data-img-id]')) return;
                 if (window.getSelection && window.getSelection().toString()) return;   // está seleccionando texto
                 setNoteMode('edit', true, false);
             });
@@ -3319,6 +3470,406 @@
             buildNoteSwatches();
             window.addEventListener('beforeunload', flushNoteSave);
             document.addEventListener('visibilitychange', () => { if (document.hidden) flushNoteSave(); });
+
+            // =====================================================
+            //  IMÁGENES  (se guardan en IndexedDB, reducidas: nunca llenan el localStorage)
+            // =====================================================
+            const IMG_DB_NAME = 'linkcentral_images', IMG_STORE = 'images', IMG_MAX_SIDE = 1600;
+            let imgDbPromise = null;
+            const imgMemory = new Map();       // respaldo si el navegador no permite IndexedDB
+            const imgUrlCache = new Map();     // id -> object URL
+            const imgMeta = new Map();         // id -> { type, name }
+            const imgInput = document.getElementById('imageFileInput');
+            const noteImgInput = document.getElementById('noteImageInput');
+            const noteImgStripEl = document.getElementById('noteImgStrip');
+            const lightboxEl = document.getElementById('lightbox');
+            const lbImg = document.getElementById('lbImg');
+            const lbCaption = document.getElementById('lbCaption');
+            const lbCounter = document.getElementById('lbCounter');
+            const lbDownload = document.getElementById('lbDownload');
+            const lb = { list: [], index: 0, open: false };
+
+            function openImgDb() {
+                if (imgDbPromise) return imgDbPromise;
+                imgDbPromise = new Promise((resolve) => {
+                    if (!('indexedDB' in window)) { resolve(null); return; }
+                    try {
+                        const req = indexedDB.open(IMG_DB_NAME, 1);
+                        req.onupgradeneeded = () => { req.result.createObjectStore(IMG_STORE, { keyPath: 'id' }); };
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => resolve(null);
+                        req.onblocked = () => resolve(null);
+                    } catch (e) { resolve(null); }
+                });
+                return imgDbPromise;
+            }
+            function imgTx(db, mode, fn) {
+                return new Promise((resolve) => {
+                    try {
+                        const tx = db.transaction(IMG_STORE, mode);
+                        let result;
+                        const req = fn(tx.objectStore(IMG_STORE));
+                        if (req) req.onsuccess = () => { result = req.result; };
+                        tx.oncomplete = () => resolve(result === undefined ? true : result);
+                        tx.onerror = tx.onabort = () => resolve(null);
+                    } catch (e) { resolve(null); }
+                });
+            }
+            async function imgPut(rec) {
+                const db = await openImgDb();
+                if (!db) { imgMemory.set(rec.id, rec); return true; }
+                return (await imgTx(db, 'readwrite', st => st.put(rec))) !== null;
+            }
+            async function imgGet(id) {
+                if (imgMemory.has(id)) return imgMemory.get(id);
+                const db = await openImgDb();
+                if (!db) return null;
+                const r = await imgTx(db, 'readonly', st => st.get(id));
+                return (r && r !== true) ? r : null;
+            }
+            async function imgDelete(id) {
+                imgMemory.delete(id);
+                if (imgUrlCache.has(id)) { try { URL.revokeObjectURL(imgUrlCache.get(id)); } catch (e) {} imgUrlCache.delete(id); }
+                const db = await openImgDb();
+                if (db) await imgTx(db, 'readwrite', st => st.delete(id));
+            }
+            async function imgAllKeys() {
+                const db = await openImgDb();
+                if (!db) return [...imgMemory.keys()];
+                const r = await imgTx(db, 'readonly', st => st.getAllKeys());
+                return Array.isArray(r) ? r : [];
+            }
+
+            async function getImageURL(id) {
+                if (imgUrlCache.has(id)) return imgUrlCache.get(id);
+                const rec = await imgGet(id);
+                if (!rec || !rec.blob) return null;
+                const url = URL.createObjectURL(rec.blob);
+                imgUrlCache.set(id, url);
+                imgMeta.set(id, { type: rec.type || rec.blob.type || 'image/jpeg', name: rec.name || 'imagen' });
+                return url;
+            }
+            // Rellena el src de las <img data-img-id> (las imágenes viven en IndexedDB, no en el HTML)
+            function hydrateImages(root = document) {
+                root.querySelectorAll('img[data-img-id]:not([data-hydrated])').forEach(img => {
+                    img.dataset.hydrated = '1';
+                    getImageURL(img.dataset.imgId).then(url => {
+                        if (!url) { img.classList.add('img-missing'); img.title = 'Imagen no encontrada'; return; }
+                        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                        img.src = url;
+                        if (img.complete && img.naturalWidth) img.classList.add('loaded');
+                    });
+                });
+            }
+
+            // Reduce la imagen (máx. 1600 px) y la comprime. Devuelve null si el formato no es compatible.
+            async function processImageFile(file) {
+                if (!file || !/^image\//.test(file.type)) return null;
+                let bmp;
+                try { bmp = await createImageBitmap(file); } catch (e) { return null; }
+                const w = bmp.width, h = bmp.height;
+                if (file.type === 'image/gif') {                                  // los GIF animados se guardan tal cual
+                    if (bmp.close) bmp.close();
+                    return file.size <= 6 * 1024 * 1024 ? { blob: file, type: file.type, w, h } : null;
+                }
+                const scale = Math.min(1, IMG_MAX_SIDE / Math.max(w, h));
+                if (scale === 1 && file.size <= 350 * 1024 && /^image\/(png|jpeg|webp)$/.test(file.type)) {
+                    if (bmp.close) bmp.close();
+                    return { blob: file, type: file.type, w, h };                  // ya es pequeña: sin tocarla
+                }
+                const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = cw; canvas.height = ch;
+                canvas.getContext('2d').drawImage(bmp, 0, 0, cw, ch);
+                if (bmp.close) bmp.close();
+                const keepAlpha = file.type === 'image/png' || file.type === 'image/webp';
+                const blob = await new Promise(r => canvas.toBlob(r, keepAlpha ? 'image/webp' : 'image/jpeg', 0.86));
+                return blob ? { blob, type: blob.type, w: cw, h: ch } : null;
+            }
+            function baseNameFromFile(name) {
+                const n = String(name || '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+                return (!n || /^image$/i.test(n)) ? 'Imagen' : n.slice(0, 80);
+            }
+            async function storeImageFile(file) {
+                const proc = await processImageFile(file);
+                if (!proc) return null;
+                const id = generateId();
+                const ok = await imgPut({ id, blob: proc.blob, type: proc.type, name: file.name || 'imagen', w: proc.w, h: proc.h, size: proc.blob.size, createdAt: Date.now() });
+                return ok ? { id, w: proc.w, h: proc.h, name: baseNameFromFile(file.name) } : null;
+            }
+            const isImageFile = (f) => !!f && /^image\//.test(f.type);
+
+            // ---- Imágenes sueltas: tarjetas en la cuadrícula ----
+            async function addImagesToView(files, parentId = getCurrentParentId()) {
+                const list = Array.from(files || []).filter(isImageFile);
+                if (!list.length) { showToast('Solo se pueden añadir imágenes'); return 0; }
+                showToast(list.length === 1 ? 'Procesando imagen…' : 'Procesando ' + list.length + ' imágenes…');
+                let arr = data;
+                if (parentId) {
+                    const pr = findItemRecursive(parentId);
+                    if (pr && pr.item.type === 'group') { if (!pr.item.items) pr.item.items = []; arr = pr.item.items; }
+                }
+                let ok = 0, lastId = null;
+                for (const f of list) {
+                    const st = await storeImageFile(f);
+                    if (!st) continue;
+                    const item = { id: generateId(), type: 'image', name: st.name, imageId: st.id, w: st.w, h: st.h, description: '', createdAt: Date.now(), isPinned: false };
+                    arr.push(item); lastId = item.id; ok++;
+                }
+                if (!ok) { showToast('No se pudo añadir la imagen (formato no compatible)'); return 0; }
+                saveData();
+                flashGroupId = lastId;
+                render();
+                showToast(ok === 1 ? 'Imagen añadida' : ok + ' imágenes añadidas');
+                return ok;
+            }
+            async function downloadImageById(imageId, baseName) {
+                const url = await getImageURL(imageId);
+                if (!url) { showToast('Imagen no encontrada'); return; }
+                const meta = imgMeta.get(imageId) || { type: 'image/jpeg' };
+                const ext = (meta.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+                const a = document.createElement('a');
+                a.href = url; a.download = (baseName || 'imagen') + '.' + ext;
+                document.body.appendChild(a); a.click(); a.remove();
+            }
+
+            // ---- Visor a pantalla completa ----
+            async function showLightboxAt(i) {
+                if (!lb.list.length) return;
+                lb.index = (i + lb.list.length) % lb.list.length;
+                const entry = lb.list[lb.index];
+                lbImg.classList.remove('loaded');
+                lbCaption.textContent = entry.caption || '';
+                lbCounter.textContent = lb.list.length > 1 ? (lb.index + 1) + ' / ' + lb.list.length : '';
+                lightboxEl.classList.toggle('lb-single', lb.list.length < 2);
+                const url = await getImageURL(entry.imageId);
+                if (!lb.open || lb.list[lb.index] !== entry) return;           // se cerró o se cambió mientras cargaba
+                if (!url) {
+                    lbImg.removeAttribute('src');
+                    lbCaption.textContent = (entry.caption ? entry.caption + ' · ' : '') + 'imagen no encontrada';
+                    lbDownload.removeAttribute('href');
+                    return;
+                }
+                lbImg.onload = () => lbImg.classList.add('loaded');
+                lbImg.src = url;
+                lbImg.alt = entry.caption || '';
+                const meta = imgMeta.get(entry.imageId) || { type: 'image/jpeg' };
+                const ext = (meta.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+                lbDownload.href = url;
+                lbDownload.download = ((entry.caption || 'imagen').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 60) || 'imagen') + '.' + ext;
+            }
+            function openLightbox(list, index = 0) {
+                if (!list || !list.length) return;
+                lb.list = list; lb.open = true;
+                lightboxEl.classList.add('open');
+                lightboxEl.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('lb-open');
+                showLightboxAt(index);
+            }
+            function closeLightbox() {
+                if (!lb.open) return;
+                lb.open = false;
+                lightboxEl.classList.remove('open');
+                lightboxEl.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('lb-open');
+            }
+            document.getElementById('lbClose').onclick = closeLightbox;
+            document.getElementById('lbPrev').onclick = () => showLightboxAt(lb.index - 1);
+            document.getElementById('lbNext').onclick = () => showLightboxAt(lb.index + 1);
+            // Un clic en cualquier zona oscura (no en la foto, el pie ni los botones) cierra el visor
+            lightboxEl.addEventListener('click', (e) => { if (e.target.closest('.lb-btn, #lbImg, .lb-caption')) return; closeLightbox(); });
+            document.addEventListener('keydown', (e) => {
+                if (!lb.open) return;
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeLightbox(); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); showLightboxAt(lb.index + 1); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); showLightboxAt(lb.index - 1); }
+            }, true);
+            // Clic en una imagen de una nota (vista, tarjeta o miniatura): se abre el visor con todas las imágenes de esa nota
+            document.addEventListener('click', (e) => {
+                const img = e.target.closest && e.target.closest('img[data-img-id]');
+                if (!img) return;
+                const box = img.closest('.note-view, .note-preview, .note-img-strip');
+                if (!box) return;
+                e.preventDefault(); e.stopPropagation();
+                const imgs = Array.from(box.querySelectorAll('img[data-img-id]'));
+                openLightbox(imgs.map(i => ({ imageId: i.dataset.imgId, caption: i.alt || '' })), Math.max(0, imgs.indexOf(img)));
+            }, true);
+            function lightboxListFromGrid() {
+                const cards = Array.from(mainItemsEl.querySelectorAll('.image-item'));
+                return cards.map(c => {
+                    const r = findItemRecursive(c.dataset.id);
+                    const it = r ? r.item : null;
+                    return { imageId: c.dataset.imageId, caption: it ? (it.description ? it.name + ' — ' + it.description : it.name) : '', cardId: c.dataset.id };
+                });
+            }
+
+            // ---- Imágenes dentro de las notas: ![nombre](img:ID) ----
+            function parseNoteImages(text) {
+                const out = [], re = /!\[([^\]]*)\]\(img:([\w-]+)\)/g;
+                let m;
+                while ((m = re.exec(text || ''))) out.push({ alt: m[1], id: m[2], index: m.index, token: m[0] });
+                return out;
+            }
+            async function insertImagesIntoNote(ta, files) {
+                const list = Array.from(files || []).filter(isImageFile);
+                if (!list.length) { showToast('Solo se pueden insertar imágenes'); return; }
+                showToast(list.length === 1 ? 'Procesando imagen…' : 'Procesando ' + list.length + ' imágenes…');
+                const tokens = [];
+                for (const f of list) {
+                    const st = await storeImageFile(f);
+                    if (st) tokens.push('![' + st.name.replace(/[\[\]]/g, '') + '](img:' + st.id + ')');
+                }
+                if (!tokens.length) { showToast('No se pudo insertar la imagen (formato no compatible)'); return; }
+                const len = ta.value.length;
+                const start = Math.min(ta.selectionStart, len), end = Math.min(ta.selectionEnd, len);
+                const before = ta.value.slice(0, start);
+                replaceText(ta, start, end, (before && !before.endsWith('\n') ? '\n' : '') + tokens.join('\n') + '\n');
+                showToast(tokens.length === 1 ? 'Imagen insertada' : tokens.length + ' imágenes insertadas');
+            }
+            let noteImgTarget = null;
+            function pickImagesForTextarea(ta) { noteImgTarget = ta; noteImgInput.value = ''; noteImgInput.click(); }
+            noteImgInput.addEventListener('change', () => {
+                const files = Array.from(noteImgInput.files || []), ta = noteImgTarget;
+                noteImgInput.value = '';
+                if (ta && files.length) insertImagesIntoNote(ta, files);
+            });
+
+            // Miniaturas de las imágenes de la nota (solo se reconstruyen cuando cambian)
+            let noteImgStripSig = '';
+            function updateNoteImgStrip() {
+                const imgs = parseNoteImages(notePanelText.value);
+                const sig = imgs.map(i => i.token).join('|');
+                if (sig === noteImgStripSig) return;
+                noteImgStripSig = sig;
+                noteImgStripEl.hidden = imgs.length === 0;
+                noteImgStripEl.innerHTML = '';
+                imgs.forEach(im => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'nis-item';
+                    const img = document.createElement('img');
+                    img.dataset.imgId = im.id; img.alt = im.alt; img.title = im.alt || 'Imagen';
+                    const rm = document.createElement('button');
+                    rm.type = 'button'; rm.className = 'nis-remove'; rm.title = 'Quitar la imagen de la nota';
+                    rm.innerHTML = '<i class="fas fa-times"></i>';
+                    rm.onclick = (e) => { e.stopPropagation(); removeNoteImageToken(im.token); };
+                    wrap.appendChild(img); wrap.appendChild(rm);
+                    noteImgStripEl.appendChild(wrap);
+                });
+                hydrateImages(noteImgStripEl);
+            }
+            function removeNoteImageToken(token) {
+                const ta = notePanelText, val = ta.value, idx = val.indexOf(token);
+                if (idx < 0) return;
+                let s0 = idx, e0 = idx + token.length;
+                const lineStart = idx === 0 ? 0 : val.lastIndexOf('\n', idx - 1) + 1;
+                let lineEnd = val.indexOf('\n', e0); if (lineEnd === -1) lineEnd = val.length;
+                if (val.slice(lineStart, lineEnd).trim() === token) {          // la imagen ocupa toda la línea: se quita la línea
+                    s0 = lineStart; e0 = Math.min(val.length, lineEnd + 1);
+                    if (lineEnd === val.length && s0 > 0) s0 -= 1;
+                }
+                replaceText(ta, s0, e0, '');
+            }
+
+            // Pegar o soltar imágenes dentro del editor de notas
+            const hasFileDrag = (e) => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'));
+            function attachImageInsertHandlers(ta, onlyNotes) {
+                ta.addEventListener('paste', (e) => {
+                    if (onlyNotes && modalItemType.value !== 'note') return;
+                    const files = Array.from((e.clipboardData && e.clipboardData.files) || []).filter(isImageFile);
+                    if (!files.length) return;
+                    e.preventDefault();
+                    insertImagesIntoNote(ta, files);
+                });
+                ta.addEventListener('dragover', (e) => { if (hasFileDrag(e) && (!onlyNotes || modalItemType.value === 'note')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+                ta.addEventListener('drop', (e) => {
+                    if (!hasFileDrag(e) || (onlyNotes && modalItemType.value !== 'note')) return;
+                    e.preventDefault(); e.stopPropagation();
+                    resetFileDragState();
+                    insertImagesIntoNote(ta, e.dataTransfer.files);
+                });
+            }
+            attachImageInsertHandlers(notePanelText, false);
+            attachImageInsertHandlers(modalItemDescription, true);
+
+            // Pegar una imagen en cualquier sitio de la página = tarjeta de imagen en la carpeta actual
+            document.addEventListener('paste', (e) => {
+                const t = e.target;
+                if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+                if (itemModal.style.display === 'block' || lb.open) return;
+                const files = Array.from((e.clipboardData && e.clipboardData.files) || []).filter(isImageFile);
+                if (!files.length) return;
+                e.preventDefault();
+                addImagesToView(files);
+            });
+            // Arrastrar archivos desde el escritorio
+            let fileDragDepth = 0;
+            function resetFileDragState() { fileDragDepth = 0; document.body.classList.remove('is-dropping-files'); }
+            document.addEventListener('dragenter', (e) => { if (!hasFileDrag(e)) return; fileDragDepth++; document.body.classList.add('is-dropping-files'); });
+            document.addEventListener('dragleave', (e) => { if (!hasFileDrag(e)) return; fileDragDepth = Math.max(0, fileDragDepth - 1); if (!fileDragDepth) document.body.classList.remove('is-dropping-files'); });
+            document.addEventListener('dragover', (e) => { if (hasFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+            document.addEventListener('drop', (e) => {
+                if (!hasFileDrag(e)) return;
+                e.preventDefault();
+                resetFileDragState();
+                const files = Array.from(e.dataTransfer.files || []);
+                if (files.some(isImageFile)) addImagesToView(files);
+                else showToast('Solo se pueden añadir imágenes');
+            });
+            window.addEventListener('blur', resetFileDragState);
+
+            document.getElementById('showAddImageBtn').onclick = () => { imgInput.value = ''; imgInput.click(); };
+            imgInput.addEventListener('change', () => {
+                const files = Array.from(imgInput.files || []);
+                imgInput.value = '';
+                if (files.length) addImagesToView(files);
+            });
+
+            // ---- Copias de seguridad e imágenes huérfanas ----
+            function collectReferencedImageIds() {
+                const ids = new Set();
+                (function walk(items) {
+                    items.forEach(it => {
+                        if (it.type === 'image' && it.imageId) ids.add(it.imageId);
+                        if (it.type === 'note' && it.description) parseNoteImages(it.description).forEach(im => ids.add(im.id));
+                        if (it.type === 'group' && it.items) walk(it.items);
+                    });
+                })(data);
+                return ids;
+            }
+            const blobToDataURL = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+            function dataURLToBlob(url) {
+                const m = /^data:([^;,]*)(;base64)?,(.*)$/s.exec(url || '');
+                if (!m) return null;
+                const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+                const arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                return new Blob([arr], { type: m[1] || 'application/octet-stream' });
+            }
+            async function restoreImportedImages(images) {
+                let n = 0;
+                for (const [id, im] of Object.entries(images || {})) {
+                    try {
+                        const blob = dataURLToBlob(im.dataUrl);
+                        if (!blob) continue;
+                        await imgPut({ id, blob, type: im.type || blob.type, name: im.name || 'imagen', w: im.w, h: im.h, size: blob.size, createdAt: Date.now() });
+                        n++;
+                    } catch (err) { /* se omite esa imagen */ }
+                }
+                return n;
+            }
+            // Borra las imágenes que ya no usa ninguna tarjeta ni nota (con 24 h de margen por si se deshace algo)
+            async function gcOrphanImages() {
+                if (!data.length) return;
+                const referenced = collectReferencedImageIds();
+                const keys = await imgAllKeys();
+                for (const id of keys) {
+                    if (referenced.has(id)) continue;
+                    const rec = await imgGet(id);
+                    if (rec && rec.createdAt && Date.now() - rec.createdAt < 24 * 3600 * 1000) continue;
+                    await imgDelete(id);
+                }
+            }
+            setTimeout(() => { gcOrphanImages().catch(() => {}); }, 4000);
 
             // Alto de 3 líneas de descripción
             function descCollapsedPx(d) {
@@ -3419,6 +3970,7 @@
                     let typeName = 'enlace';
                     if (item.type === 'group') typeName = 'grupo';
                     if (item.type === 'note') typeName = 'nota';
+                    if (item.type === 'image') typeName = 'imagen';
                     
                     if(confirm(`¿Eliminar este ${typeName}?` + (item.type === 'group' ? ' Esto eliminará todo su contenido.' : ''))) {
                         deleteItem(item.id); 
@@ -3429,6 +3981,29 @@
 
                 const contentWrapper = document.createElement(item.type === 'link' ? 'a' : 'div');
                 contentWrapper.className = 'item-content-wrapper';
+
+                if (item.type === 'image') {
+                    // Imagen suelta: la foto ocupa toda la tarjeta; al pulsarla se abre el visor
+                    itemDiv.dataset.imageId = item.imageId || '';
+                    contentWrapper.classList.add('image-wrapper');
+                    const ph = document.createElement('i');
+                    ph.className = 'fas fa-image image-ph';
+                    const pic = document.createElement('img');
+                    pic.className = 'image-item-img';
+                    pic.dataset.imgId = item.imageId || '';
+                    pic.alt = item.name; pic.draggable = false;
+                    const cap = document.createElement('div');
+                    cap.className = 'image-item-caption';
+                    cap.textContent = item.name;
+                    contentWrapper.appendChild(ph); contentWrapper.appendChild(pic); contentWrapper.appendChild(cap);
+                    contentWrapper.onclick = (e) => {
+                        if (e.target.closest('.item-actions-container') || e.target.closest('.drag-handle')) return;
+                        const list = lightboxListFromGrid();
+                        openLightbox(list, Math.max(0, list.findIndex(x => x.cardId === item.id)));
+                    };
+                    itemDiv.appendChild(contentWrapper);
+                    return itemDiv;
+                }
 
                 if (item.type === 'link') {
                     contentWrapper.href = item.url;
@@ -3990,6 +4565,7 @@
                 flashNoteId = null;
                 flashGroupId = null;
                 requestAnimationFrame(updateDescriptionOverflow);
+                hydrateImages(document);
                 renderedIds = new Set(itemsToRender.map(i => i.id));
                 lastViewKey = viewKey;
                 lastViewDepth = viewDepth;
@@ -4267,6 +4843,15 @@
                         const currentParentOfNote = noteDetails ? noteDetails.parentId : null;
                         populateGroupSelector(modalItemGroupSelector, currentParentOfNote);
 
+                    } else if (type === 'image') {
+                        modalTitle.textContent = "Editar Imagen";
+                        modalItemDescription.value = result.item.description || '';
+                        modalDescriptionContainer.style.display = 'block';
+                        modalDescriptionLabel.textContent = "Pie de foto (opcional):";
+                        modalMoveToGroupContainer.style.display = 'block';
+                        const imageDetails = findParentDetails(id, data);
+                        populateGroupSelector(modalItemGroupSelector, imageDetails ? imageDetails.parentId : null);
+
                     } else if (type === 'group') {
                         modalTitle.textContent = "Editar Grupo";
                         modalMoveToGroupContainer.style.display = 'block';
@@ -4345,7 +4930,7 @@
                     if (modalMoveToGroupContainer.style.display === 'block') { 
                         newParentIdForItem = modalItemGroupSelector.value; 
                     }
-                    editItem(id, name, (type === 'link' ? url : undefined), ((type === 'link' || type === 'note') ? description : undefined), newParentIdForItem, color);
+                    editItem(id, name, (type === 'link' ? url : undefined), ((type === 'link' || type === 'note' || type === 'image') ? description : undefined), newParentIdForItem, color);
                 }
                 else { 
                     // Add item
@@ -4536,7 +5121,7 @@
                 const menuUl = customContextMenuEl.querySelector('ul');
                 menuUl.innerHTML = ''; 
                 let menuItems = [];
-                const itemResult = (['link', 'group', 'note'].includes(targetType)) ? findItemRecursive(targetId) : null;
+                const itemResult = (['link', 'group', 'note', 'image'].includes(targetType)) ? findItemRecursive(targetId) : null;
                 const itemData = itemResult ? itemResult.item : null;
 
 
@@ -4549,6 +5134,16 @@
                         { type: 'separator' },
                         { label: 'Copiar Elemento', icon: 'fas fa-clone', action: 'copy-item', itemType: 'link', itemId: targetId },
                         { label: 'Eliminar Enlace', icon: 'fas fa-trash-alt', action: 'delete-link', itemId: targetId }
+                    ];
+                } else if (targetType === 'image' && itemData) {
+                    menuItems = [
+                        { label: 'Ver imagen', icon: 'fas fa-expand', action: 'open-image', itemId: targetId },
+                        { label: itemData.isPinned ? 'Desfijar Imagen' : 'Fijar Imagen', icon: 'fas fa-thumbtack', action: 'toggle-pin', itemId: targetId },
+                        { type: 'separator' },
+                        { label: 'Editar Imagen', icon: 'fas fa-pencil-alt', action: 'edit-image', itemId: targetId },
+                        { label: 'Descargar', icon: 'fas fa-download', action: 'download-image', itemId: targetId },
+                        { type: 'separator' },
+                        { label: 'Eliminar Imagen', icon: 'fas fa-trash-alt', action: 'delete-image', itemId: targetId }
                     ];
                 } else if (targetType === 'note' && itemData) {
                     menuItems = [
@@ -4665,6 +5260,16 @@
                 if (action === 'toggle-pin') togglePinItem(itemId); 
                 else if (action === 'edit-link') openModal('link', itemId);
                 else if (action === 'edit-note') openModal('note', itemId);
+                else if (action === 'edit-image') { openModal('image', itemId); }
+                else if (action === 'open-image') {
+                    const list = lightboxListFromGrid();
+                    openLightbox(list, Math.max(0, list.findIndex(x => x.cardId === itemId)));
+                }
+                else if (action === 'download-image') {
+                    const r = findItemRecursive(itemId);
+                    if (r) downloadImageById(r.item.imageId, r.item.name);
+                }
+                else if (action === 'delete-image') { if (confirm('¿Estás seguro de que quieres eliminar esta imagen?')) deleteItem(itemId); }
                 else if (action === 'copy-link-url') copyText(targetLi.dataset.url || '', 'URL copiada');
                 else if (action === 'copy-note-text') copyText(targetLi.dataset.description || '', 'Texto copiado');
                 else if (action === 'delete-link') if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) deleteItem(itemId);
@@ -4713,25 +5318,33 @@
                 }
             });
 
-            function exportAllData() {
+            async function exportAllData() {
                 mainMenuDropdown.classList.remove('show'); hideContextMenu();
                 const currentTheme = localStorage.getItem('linkCentralTheme') || 'dark';
                 const customColors = JSON.parse(localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY) || '{}');
                 const sortPref = currentSortPreference; 
                 const exportObject = {
-                    version: "2.1.0-notes", 
+                    version: "2.2.0-images", 
                     linkData: data,
                     theme: currentTheme, 
                     customColors: customColors,
                     sortPreference: sortPref 
                 };
+                // Las imágenes (guardadas aparte, en IndexedDB) viajan dentro de la copia de seguridad
+                const images = {};
+                for (const id of collectReferencedImageIds()) {
+                    const rec = await imgGet(id);
+                    if (rec && rec.blob) images[id] = { name: rec.name, type: rec.type, w: rec.w, h: rec.h, dataUrl: await blobToDataURL(rec.blob) };
+                }
+                if (Object.keys(images).length) exportObject.images = images;
                 const dataStr = JSON.stringify(exportObject, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                const exportFileDefaultName = 'copia_seguridad_linkcentral.json';
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
                 let linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri); linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click(); linkElement.remove();
-                alert('¡Datos exportados!');
+                linkElement.setAttribute('href', url); linkElement.setAttribute('download', 'copia_seguridad_linkcentral.json');
+                document.body.appendChild(linkElement); linkElement.click(); linkElement.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+                alert('¡Datos exportados!' + (Object.keys(images).length ? ' (incluye ' + Object.keys(images).length + ' imagen' + (Object.keys(images).length === 1 ? '' : 'es') + ')' : ''));
             }
             function importAllData(event) {
                 mainMenuDropdown.classList.remove('show'); hideContextMenu();
@@ -4740,12 +5353,13 @@
                     event.target.value = null; return;
                 }
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const imported = JSON.parse(e.target.result);
                         if (!imported || typeof imported.linkData === 'undefined') { 
                             alert('Error: Formato de archivo no válido o faltan linkData.'); return;
                         }
+                        if (imported.images) await restoreImportedImages(imported.images);
                         data = imported.linkData || [];
                         ensureItemProperties(data); 
                         saveData();
