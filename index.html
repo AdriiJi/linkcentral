@@ -244,7 +244,38 @@
             position: relative;
             display: flex;
             align-items: center;
+            gap: 10px;
             flex-shrink: 0; 
+        }
+
+        .header-btn-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            border-radius: 50%;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .header-btn-wrap:active {
+            cursor: grabbing;
+        }
+        .header-btn-wrap.header-btn-ghost {
+            opacity: 0.35;
+            transform: scale(0.88);
+            outline: 2px dashed var(--accent-primary);
+            border-radius: 50%;
+        }
+        .header-btn-wrap.header-btn-chosen {
+            transform: scale(1.15);
+            z-index: 10;
+        }
+        .header-btn-wrap.header-btn-dragging {
+            opacity: 0.95;
+            box-shadow: 0 8px 24px var(--shadow-color);
         }
         
         .header-action-button {
@@ -261,7 +292,7 @@
             align-items: center;
             justify-content: center;
             transition: color 0.2s, border-color 0.2s;
-            margin-right: 10px;
+            margin-right: 0;
         }
         .header-action-button:hover {
             color: var(--text-primary);
@@ -1882,17 +1913,27 @@
                     <button id="backToParentBtn" class="hidden" title="Volver Atrás"><i class="fas fa-arrow-left"></i></button>
                     <h1>LinkCentral</h1>
                 </div>
-                <div class="header-menu-container">
-                    <button id="showAddLinkModalBtn" class="header-action-button" title="Añadir Enlace"><i class="fas fa-link"></i></button>
-                    <button id="showAddGroupModalBtn" class="header-action-button" title="Añadir Grupo"><i class="fas fa-folder-plus"></i></button>
-                    <button id="showAddImageBtn" class="header-action-button" title="Añadir imagen (también puedes pegarla o arrastrarla)"><i class="fas fa-image"></i></button>
-                    <button id="mainMenuToggle" class="header-action-button" title="Más opciones"><i class="fas fa-ellipsis-h"></i></button>
-                    <div class="main-menu-dropdown" id="mainMenuDropdown">
-                        <button id="exportDataBtn"><i class="fas fa-file-export"></i> Exportar</button>
-                        <label for="importFile" class="import-label-button"><i class="fas fa-file-import"></i> Importar</label>
-                        <input type="file" id="importFile" accept=".json" style="display:none;">
+                <div class="header-menu-container" id="headerMenuContainer">
+                    <div class="header-btn-wrap" data-btn-id="link" title="Añadir Enlace (arrastra horizontalmente para mover de sitio)">
+                        <button id="showAddLinkModalBtn" class="header-action-button" title="Añadir Enlace"><i class="fas fa-link"></i></button>
                     </div>
-                    <button id="showAddNoteModalBtn" class="header-action-button" title="Notas" aria-controls="notes-rail" aria-expanded="false"><i class="fas fa-sticky-note"></i></button>
+                    <div class="header-btn-wrap" data-btn-id="group" title="Añadir Grupo (arrastra horizontalmente para mover de sitio)">
+                        <button id="showAddGroupModalBtn" class="header-action-button" title="Añadir Grupo"><i class="fas fa-folder-plus"></i></button>
+                    </div>
+                    <div class="header-btn-wrap" data-btn-id="image" title="Añadir imagen (arrastra horizontalmente para mover de sitio)">
+                        <button id="showAddImageBtn" class="header-action-button" title="Añadir imagen (también puedes pegarla o arrastrarla)"><i class="fas fa-image"></i></button>
+                    </div>
+                    <div class="header-btn-wrap header-more-wrap" data-btn-id="more" title="Más opciones (arrastra horizontalmente para mover de sitio)">
+                        <button id="mainMenuToggle" class="header-action-button" title="Más opciones"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="main-menu-dropdown" id="mainMenuDropdown">
+                            <button id="exportDataBtn"><i class="fas fa-file-export"></i> Exportar</button>
+                            <label for="importFile" class="import-label-button"><i class="fas fa-file-import"></i> Importar</label>
+                            <input type="file" id="importFile" accept=".json" style="display:none;">
+                        </div>
+                    </div>
+                    <div class="header-btn-wrap" data-btn-id="note" title="Notas (arrastra horizontalmente para mover de sitio)">
+                        <button id="showAddNoteModalBtn" class="header-action-button" title="Notas" aria-controls="notes-rail" aria-expanded="false"><i class="fas fa-sticky-note"></i></button>
+                    </div>
                 </div>
             </div>
             <div class="app-header-controls-row">
@@ -4953,8 +4994,77 @@
                 }
             });
 
+            const HEADER_BTNS_ORDER_KEY = 'linkCentral_headerButtonsOrder_v1';
+
+            function updateDropdownAlignment() {
+                if (!mainMenuDropdown) return;
+                const moreWrap = document.querySelector('.header-more-wrap');
+                if (!moreWrap) return;
+                const rect = moreWrap.getBoundingClientRect();
+                if (rect.left < 210) {
+                    mainMenuDropdown.style.right = 'auto';
+                    mainMenuDropdown.style.left = '0';
+                    mainMenuDropdown.style.transformOrigin = 'top left';
+                } else {
+                    mainMenuDropdown.style.right = '0';
+                    mainMenuDropdown.style.left = 'auto';
+                    mainMenuDropdown.style.transformOrigin = 'top right';
+                }
+            }
+
+            function applyHeaderButtonsOrder() {
+                const container = document.getElementById('headerMenuContainer');
+                if (!container) return;
+                try {
+                    const saved = localStorage.getItem(HEADER_BTNS_ORDER_KEY);
+                    if (!saved) return;
+                    const order = JSON.parse(saved);
+                    if (!Array.isArray(order) || order.length === 0) return;
+                    const items = Array.from(container.children);
+                    const map = new Map();
+                    items.forEach(el => {
+                        const id = el.dataset && el.dataset.btnId;
+                        if (id) map.set(id, el);
+                    });
+                    order.forEach(id => {
+                        const el = map.get(id);
+                        if (el) container.appendChild(el);
+                    });
+                } catch (e) {
+                    console.error('Error restaurando orden de botones de cabecera', e);
+                }
+            }
+
+            function initHeaderButtonsDrag() {
+                const container = document.getElementById('headerMenuContainer');
+                if (!container) return;
+                applyHeaderButtonsOrder();
+                updateDropdownAlignment();
+
+                if (typeof Sortable !== 'undefined') {
+                    new Sortable(container, {
+                        animation: 250,
+                        direction: 'horizontal',
+                        draggable: '.header-btn-wrap',
+                        ghostClass: 'header-btn-ghost',
+                        chosenClass: 'header-btn-chosen',
+                        dragClass: 'header-btn-dragging',
+                        fallbackOnBody: false,
+                        swapThreshold: 0.65,
+                        onEnd: function() {
+                            const newOrder = Array.from(container.querySelectorAll('.header-btn-wrap'))
+                                .map(el => el.dataset.btnId)
+                                .filter(Boolean);
+                            localStorage.setItem(HEADER_BTNS_ORDER_KEY, JSON.stringify(newOrder));
+                            updateDropdownAlignment();
+                        }
+                    });
+                }
+            }
+
             mainMenuToggleBtn.onclick = (e) => {
                 e.stopPropagation();
+                updateDropdownAlignment();
                 mainMenuDropdown.classList.toggle('show');
                 hideContextMenu();
             };
@@ -5480,6 +5590,7 @@
             });
 
             buildColorSwatches();
+            initHeaderButtonsDrag();
             currentApplyInitialThemeFn(); 
             loadData(); 
         });
