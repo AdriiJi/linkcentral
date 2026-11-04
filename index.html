@@ -1760,8 +1760,9 @@
         }
         .is-dragging-item #backToParentBtn:not(.hidden) { outline: 1px dashed var(--accent-primary); outline-offset: 3px; }
 
-        /* ----- Descripción de los enlaces: "Ver más / Ver menos" sin abrir el editor ----- */
-        .link-item.desc-more:not(.desc-open) .link-item-description {
+        /* ----- Descripción de los enlaces e imágenes: "Ver más / Ver menos" sin abrir el editor ----- */
+        .link-item.desc-more:not(.desc-open) .link-item-description,
+        .image-item.desc-more:not(.desc-open) .image-item-description {
             -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent);
             mask-image: linear-gradient(to bottom, #000 58%, transparent);
         }
@@ -1773,14 +1774,18 @@
             cursor: pointer; user-select: none; outline: none;
             transition: background-color .2s, transform .25s var(--ease-spring);
         }
-        .link-item.desc-more .desc-toggle { display: inline-flex; align-items: center; gap: 6px; }
+        .link-item.desc-more .desc-toggle,
+        .image-item.desc-more .desc-toggle { display: inline-flex; align-items: center; gap: 6px; }
         .desc-toggle:hover, .desc-toggle:focus-visible { background: var(--accent-primary-transparent); transform: translateY(-1px); }
         .desc-toggle:active { transform: scale(.94); }
         .desc-toggle i { font-size: .8em; transition: transform .35s var(--ease-spring); }
-        .link-item.desc-open .desc-toggle i { transform: rotate(180deg); }
+        .link-item.desc-open .desc-toggle i,
+        .image-item.desc-open .desc-toggle i { transform: rotate(180deg); }
         .desc-toggle .dt-less { display: none; }
-        .link-item.desc-open .desc-toggle .dt-more { display: none; }
-        .link-item.desc-open .desc-toggle .dt-less { display: inline; }
+        .link-item.desc-open .desc-toggle .dt-more,
+        .image-item.desc-open .desc-toggle .dt-more { display: none; }
+        .link-item.desc-open .desc-toggle .dt-less,
+        .image-item.desc-open .desc-toggle .dt-less { display: inline; }
 
         /* =====================================================
            IMÁGENES: tarjetas, notas, visor
@@ -1805,11 +1810,56 @@
         .image-item:hover .image-item-img { transform: scale(1.07); }
         .image-item-caption {
             position: absolute; left: 0; right: 0; bottom: 0;
-            padding: 30px 12px 10px;
-            background: linear-gradient(transparent, rgba(0,0,0,.78));
-            color: #fff; font-weight: 600; font-size: .9em;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            padding: 28px 12px 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,.82) 40%, rgba(0,0,0,.92));
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
             pointer-events: none;
+            max-height: 85%;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            transition: max-height 0.3s var(--ease-out), background 0.3s ease;
+        }
+        .image-item-title {
+            font-weight: 600;
+            font-size: 0.92em;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .image-item-description {
+            font-size: 0.82em;
+            color: rgba(255,255,255,0.88);
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: calc(1.4em * 2.5);
+            overflow: hidden;
+            transition: max-height 0.35s var(--ease-out);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .image-item .desc-toggle {
+            color: var(--accent-secondary, #50e3c2);
+            font-size: 0.76em;
+            margin: 2px 0 0 0;
+            padding: 1px 7px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.45);
+            width: fit-content;
+            pointer-events: auto;
+        }
+        .image-item .desc-toggle:hover {
+            background: rgba(255,255,255,0.22);
+            color: #fff;
+        }
+        .image-item.desc-open .image-item-caption {
+            max-height: 94%;
+            pointer-events: auto;
+            background: linear-gradient(transparent, rgba(0,0,0,0.88) 25%, rgba(0,0,0,0.96));
         }
         .image-item .item-actions-container { background-color: rgba(0,0,0,.55); z-index: 3; }
         .image-item .item-actions-container button { color: #fff; }
@@ -3919,8 +3969,8 @@
             }
             // Muestra "Ver más" solo en las tarjetas cuya descripción no cabe en 3 líneas
             function updateDescriptionOverflow() {
-                document.querySelectorAll('.link-item').forEach(card => {
-                    const d = card.querySelector('.link-item-description');
+                document.querySelectorAll('.link-item, .image-item').forEach(card => {
+                    const d = card.querySelector('.link-item-description, .image-item-description');
                     if (!d) return;
                     const collapsed = descCollapsedPx(d);
                     const prev = d.style.maxHeight;
@@ -4024,7 +4074,7 @@
                 contentWrapper.className = 'item-content-wrapper';
 
                 if (item.type === 'image') {
-                    // Imagen suelta: la foto ocupa toda la tarjeta; al pulsarla se abre el visor
+                    // Imagen suelta: la foto ocupa la tarjeta; pie de foto y preview Ver Más
                     itemDiv.dataset.imageId = item.imageId || '';
                     contentWrapper.classList.add('image-wrapper');
                     const ph = document.createElement('i');
@@ -4033,12 +4083,57 @@
                     pic.className = 'image-item-img';
                     pic.dataset.imgId = item.imageId || '';
                     pic.alt = item.name; pic.draggable = false;
+                    
                     const cap = document.createElement('div');
                     cap.className = 'image-item-caption';
-                    cap.textContent = item.name;
-                    contentWrapper.appendChild(ph); contentWrapper.appendChild(pic); contentWrapper.appendChild(cap);
+                    
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'image-item-title';
+                    titleDiv.textContent = item.name;
+                    cap.appendChild(titleDiv);
+
+                    if (item.description && item.description.trim() !== '') {
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'image-item-description';
+                        descDiv.textContent = item.description;
+                        cap.appendChild(descDiv);
+
+                        const descToggle = document.createElement('span');
+                        descToggle.className = 'desc-toggle';
+                        descToggle.setAttribute('role', 'button');
+                        descToggle.tabIndex = 0;
+                        descToggle.setAttribute('aria-expanded', expandedDescIds.has(item.id) ? 'true' : 'false');
+                        descToggle.innerHTML = '<span class="dt-more">Ver más</span><span class="dt-less">Ver menos</span><i class="fas fa-chevron-down"></i>';
+
+                        const toggleImageDescription = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const open = !itemDiv.classList.contains('desc-open');
+                            itemDiv.classList.toggle('desc-open', open);
+                            descToggle.setAttribute('aria-expanded', String(open));
+                            if (open) expandedDescIds.add(item.id); else expandedDescIds.delete(item.id);
+                            descDiv.style.maxHeight = (open ? descDiv.scrollHeight : descCollapsedPx(descDiv)) + 'px';
+                        };
+                        descToggle.addEventListener('click', toggleImageDescription);
+                        descToggle.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') toggleImageDescription(e);
+                        });
+                        cap.appendChild(descToggle);
+                        if (expandedDescIds.has(item.id)) itemDiv.classList.add('desc-open');
+                    }
+
+                    cap.onclick = (e) => {
+                        if (e.target.closest('.desc-toggle') || (window.getSelection && window.getSelection().toString())) {
+                            e.stopPropagation();
+                        }
+                    };
+
+                    contentWrapper.appendChild(ph);
+                    contentWrapper.appendChild(pic);
+                    contentWrapper.appendChild(cap);
+
                     contentWrapper.onclick = (e) => {
-                        if (e.target.closest('.item-actions-container') || e.target.closest('.drag-handle')) return;
+                        if (e.target.closest('.item-actions-container') || e.target.closest('.drag-handle') || e.target.closest('.desc-toggle')) return;
                         const list = lightboxListFromGrid();
                         openLightbox(list, Math.max(0, list.findIndex(x => x.cardId === item.id)));
                     };
