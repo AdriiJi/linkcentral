@@ -520,6 +520,74 @@
             grid-column: 1 / -1; 
         }
 
+        /* Botón rápido para añadir enlace dentro de grupos */
+        .quick-add-link-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 20px;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            outline: none;
+            transition: border-color .25s, background-color .25s, transform .35s var(--ease-spring), box-shadow .3s var(--ease-out);
+        }
+        html.light-mode .quick-add-link-card {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        .quick-add-link-card:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--sortable-ghost-bg);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 26px var(--shadow-color), 0 0 0 1px var(--accent-primary-transparent);
+        }
+        .quick-add-link-card:focus-visible {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-transparent);
+        }
+        .quick-add-link-card:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+        .quick-add-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid var(--text-secondary);
+            color: var(--text-secondary);
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25em;
+            transition: all 0.3s var(--ease-spring);
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+        .quick-add-link-card:hover .quick-add-circle {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: scale(1.15) rotate(-10deg);
+            box-shadow: 0 6px 18px var(--accent-primary-transparent);
+            background-color: var(--bg-primary);
+        }
+        .quick-add-label {
+            font-size: 0.88em;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .quick-add-link-card:hover .quick-add-label {
+            color: var(--accent-primary);
+            transform: translateY(1px);
+        }
+
         .item {
             background-color: var(--bg-secondary);
             border-radius: 8px; 
@@ -4520,6 +4588,44 @@
                 renderedNoteIds = seenNoteIds;
             }
 
+            function createQuickAddLinkCard(parentId) {
+                const card = document.createElement('div');
+                card.className = 'quick-add-link-card';
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
+                const tooltipText = parentId ? 'Añadir enlace en este grupo' : 'Añadir enlace';
+                card.setAttribute('title', tooltipText);
+                card.setAttribute('aria-label', tooltipText);
+
+                const circle = document.createElement('div');
+                circle.className = 'quick-add-circle';
+                circle.innerHTML = '<i class="fas fa-link"></i>';
+
+                const label = document.createElement('span');
+                label.className = 'quick-add-label';
+                label.textContent = 'Añadir enlace';
+
+                card.appendChild(circle);
+                card.appendChild(label);
+
+                const trigger = (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    openModal('link', null, parentId || null);
+                };
+
+                card.addEventListener('click', trigger);
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        trigger(e);
+                    }
+                });
+
+                return card;
+            }
+
             function render() {
                 mainItemsEl.innerHTML = ''; 
                 notesListEl.innerHTML = ''; 
@@ -4685,8 +4791,22 @@
                         ? 'No hay enlaces ni grupos que coincidan con tu búsqueda.'
                         : 'No hay enlaces ni grupos aquí. ¡Añade algunos!';
                     mainItemsEl.appendChild(message);
+                    if (!isFiltering()) {
+                        const quickCard = createQuickAddLinkCard(currentParentId);
+                        quickCard.classList.add('item-enter');
+                        quickCard.style.setProperty('--i', '1');
+                        mainItemsEl.appendChild(quickCard);
+                    }
                 } else {
                     renderItemsInto(mainItemsEl, mainToRender);
+                    if (!isFiltering()) {
+                        const quickCard = createQuickAddLinkCard(currentParentId);
+                        if (viewChanged) {
+                            quickCard.classList.add('item-enter');
+                            quickCard.style.setProperty('--i', Math.min(enterIndex++, 14));
+                        }
+                        mainItemsEl.appendChild(quickCard);
+                    }
                 }
 
                 if (notesRailOpen) {
