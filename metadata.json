@@ -1,6 +1,0 @@
-{
-  "name": "LinkCentral",
-  "description": "Organizador visual de enlaces, carpetas, imágenes y notas con arrastre personalizable.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
