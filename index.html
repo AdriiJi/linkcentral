@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- SortableJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- Firebase Cloud Sync -->
+    <script type="module" src="/src/firebaseSync.ts"></script>
     <style>
         :root {
             --bg-primary: #1e202b; /* Fondo oscuro principal */
@@ -362,6 +364,135 @@
             color: white;
         }
         #importFile { display: none; }
+
+        /* Cloud Sync Button & Menu */
+        .cloud-sync-wrap {
+            position: relative;
+            margin-left: 14px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .cloud-auth-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.82em;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: all 0.25s var(--ease-spring);
+        }
+        .cloud-auth-btn:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            background: var(--bg-primary);
+            transform: translateY(-1px);
+        }
+        .cloud-auth-btn.signed-in {
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+        .cloud-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        .cloud-status-dot.synced {
+            background-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+        }
+        .cloud-status-dot.syncing {
+            background-color: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+            animation: pulseDot 1s infinite;
+        }
+        .cloud-status-dot.offline {
+            background-color: #64748b;
+        }
+        .cloud-status-dot.error {
+            background-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        .cloud-user-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            padding: 12px;
+            min-width: 230px;
+            z-index: 2100;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .cloud-user-menu.open {
+            display: flex;
+            animation: menuPop 0.25s var(--ease-out);
+        }
+        .cloud-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .cloud-user-name {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .cloud-user-email {
+            font-size: 0.78em;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cloud-menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+        .cloud-sync-status-row {
+            font-size: 0.78em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cloud-menu-action {
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.82em;
+            color: var(--text-primary);
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .cloud-menu-action:hover {
+            background: var(--bg-primary);
+            border-color: var(--border-color);
+            color: var(--accent-primary);
+        }
+        .cloud-menu-action.danger:hover {
+            color: var(--danger);
+        }
 
         #link-organizer {
             display: grid;
@@ -2030,6 +2161,29 @@
                 <div class="app-header-left"> 
                     <button id="backToParentBtn" class="hidden" title="Volver Atrás"><i class="fas fa-arrow-left"></i></button>
                     <h1>LinkCentral</h1>
+                    <div id="cloudSyncStatusWrap" class="cloud-sync-wrap">
+                        <button type="button" id="cloudAuthBtn" class="cloud-auth-btn" title="Sincronización en la nube con Google">
+                            <i class="fas fa-cloud"></i>
+                            <span id="cloudAuthBtnText">Nube</span>
+                            <span id="cloudStatusDot" class="cloud-status-dot offline"></span>
+                        </button>
+                        <div id="cloudUserMenu" class="cloud-user-menu">
+                            <div class="cloud-user-info" id="cloudUserInfo">
+                                <span class="cloud-user-name" id="cloudUserName">Conectando...</span>
+                                <span class="cloud-user-email" id="cloudUserEmail"></span>
+                            </div>
+                            <div class="cloud-menu-divider"></div>
+                            <div class="cloud-sync-status-row">
+                                <span id="cloudStatusLabelText">Modo local (sin cuenta)</span>
+                            </div>
+                            <button type="button" class="cloud-menu-action" id="cloudSyncNowBtn">
+                                <i class="fas fa-sync-alt"></i> Sincronizar ahora
+                            </button>
+                            <button type="button" class="cloud-menu-action danger" id="cloudSignOutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="header-menu-container" id="headerMenuContainer">
                     <div class="header-btn-wrap" data-btn-id="link" title="Añadir Enlace (arrastra horizontalmente para mover de sitio)">
@@ -2341,7 +2495,12 @@
             }
 
             function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 7); }
-            function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+            function saveData(skipCloud = false) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                if (!skipCloud && window.LinkCentralCloud && window.LinkCentralCloud.isSignedIn()) {
+                    window.LinkCentralCloud.saveTree(data);
+                }
+            }
             function loadData() {
                 const stored = localStorage.getItem(STORAGE_KEY);
                 data = stored ? JSON.parse(stored) : [];
@@ -5804,10 +5963,128 @@
                 ripple.addEventListener('animationend', () => ripple.remove());
             });
 
+            // Sincronización en la nube con Firebase Firestore y Auth
+            function initCloudSync() {
+                const authBtn = document.getElementById('cloudAuthBtn');
+                const btnText = document.getElementById('cloudAuthBtnText');
+                const dot = document.getElementById('cloudStatusDot');
+                const menu = document.getElementById('cloudUserMenu');
+                const userName = document.getElementById('cloudUserName');
+                const userEmail = document.getElementById('cloudUserEmail');
+                const statusLabel = document.getElementById('cloudStatusLabelText');
+                const syncNowBtn = document.getElementById('cloudSyncNowBtn');
+                const signOutBtn = document.getElementById('cloudSignOutBtn');
+
+                if (!authBtn) return;
+
+                function setStatusDot(status) {
+                    if (!dot) return;
+                    dot.className = 'cloud-status-dot ' + status;
+                    if (statusLabel) {
+                        if (status === 'synced') statusLabel.textContent = 'Sincronizado en tiempo real';
+                        else if (status === 'syncing') statusLabel.textContent = 'Sincronizando con la nube...';
+                        else if (status === 'offline') statusLabel.textContent = 'Modo local (sin cuenta)';
+                        else if (status === 'error') statusLabel.textContent = 'Error de conexión';
+                    }
+                }
+
+                function bindCloudService() {
+                    const cloud = window.LinkCentralCloud;
+                    if (!cloud) return;
+
+                    cloud.onAuthChanged((user) => {
+                        if (user) {
+                            authBtn.classList.add('signed-in');
+                            const firstName = (user.displayName || user.email || 'Conectado').split(' ')[0];
+                            btnText.textContent = firstName;
+                            if (userName) userName.textContent = user.displayName || 'Usuario';
+                            if (userEmail) userEmail.textContent = user.email || '';
+                            setStatusDot('synced');
+                            // Si en la nube no hay nada aún pero tenemos datos locales, sincronizar
+                            if (Array.isArray(data) && data.length > 0) {
+                                cloud.saveTree(data);
+                            }
+                        } else {
+                            authBtn.classList.remove('signed-in');
+                            btnText.textContent = 'Conectar';
+                            if (menu) menu.classList.remove('open');
+                            setStatusDot('offline');
+                        }
+                    });
+
+                    cloud.onDataChanged((remoteTree) => {
+                        if (Array.isArray(remoteTree) && remoteTree.length > 0) {
+                            data = remoteTree;
+                            ensureItemProperties(data);
+                            saveData(true);
+                            render();
+                        }
+                    });
+
+                    cloud.onSyncStatus((status) => {
+                        setStatusDot(status);
+                    });
+                }
+
+                if (window.LinkCentralCloud) {
+                    bindCloudService();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.LinkCentralCloud) {
+                            clearInterval(checkInterval);
+                            bindCloudService();
+                        }
+                    }, 100);
+                    setTimeout(() => clearInterval(checkInterval), 5000);
+                }
+
+                authBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const cloud = window.LinkCentralCloud;
+                    if (!cloud) return;
+                    if (cloud.isSignedIn()) {
+                        if (menu) menu.classList.toggle('open');
+                    } else {
+                        cloud.signIn().catch(err => {
+                            console.error('Error al iniciar sesión:', err);
+                        });
+                    }
+                });
+
+                if (syncNowBtn) {
+                    syncNowBtn.addEventListener('click', () => {
+                        const cloud = window.LinkCentralCloud;
+                        if (cloud && cloud.isSignedIn()) {
+                            cloud.saveTree(data).then(() => {
+                                setStatusDot('synced');
+                            });
+                        }
+                    });
+                }
+
+                if (signOutBtn) {
+                    signOutBtn.addEventListener('click', () => {
+                        const cloud = window.LinkCentralCloud;
+                        if (cloud) {
+                            cloud.signOut().then(() => {
+                                if (menu) menu.classList.remove('open');
+                            });
+                        }
+                    });
+                }
+
+                document.addEventListener('click', (e) => {
+                    if (menu && menu.classList.contains('open') && !e.target.closest('#cloudSyncStatusWrap')) {
+                        menu.classList.remove('open');
+                    }
+                });
+            }
+
             buildColorSwatches();
             initHeaderButtonsDrag();
             currentApplyInitialThemeFn(); 
             loadData(); 
+            initCloudSync();
         });
     </script>
 </body>

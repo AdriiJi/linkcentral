@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data, userId) {
+      return data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.email is string && data.email.size() <= 320;
+    }
+
+    function isValidItem(data, userId) {
+      return data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.id is string && isValidId(data.id) &&
+             data.type in ['link', 'group', 'image', 'note'] &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.order is number &&
+             (!('parentId' in data) || (data.parentId is string && data.parentId.size() <= 128)) &&
+             (!('url' in data) || (data.url is string && data.url.size() <= 2000)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 5000)) &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 50)) &&
+             (!('isPinned' in data) || (data.isPinned is bool)) &&
+             (!('imageId' in data) || (data.imageId is string && data.imageId.size() <= 128)) &&
+             (!('createdAt' in data) || (data.createdAt is number));
+    }
+
+    function isValidPreferences(data, userId) {
+      return data.userId == userId &&
+             data.userId == request.auth.uid &&
+             (!('theme' in data) || (data.theme in ['dark', 'light'])) &&
+             (!('headerButtonsOrder' in data) || (data.headerButtonsOrder is string && data.headerButtonsOrder.size() <= 500)) &&
+             (!('customColors' in data) || (data.customColors is string && data.customColors.size() <= 2000));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidUser(incoming(), userId);
+      allow update: if isOwner(userId) && isValidUser(incoming(), userId) && incoming().userId == existing().userId;
+      allow delete: if isOwner(userId);
+
+      match /items/{itemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(itemId) && isValidItem(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(itemId) && isValidItem(incoming(), userId) && incoming().userId == existing().userId && incoming().id == existing().id;
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+
+      match /settings/preferences {
+        allow get: if isOwner(userId);
+        allow list: if false;
+        allow create: if isOwner(userId) && isValidPreferences(incoming(), userId);
+        allow update: if isOwner(userId) && isValidPreferences(incoming(), userId) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
